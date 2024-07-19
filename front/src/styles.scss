@@ -1,0 +1,14 @@
+:root {
+  --bg-primary-color: linear-gradient(94deg, rgb(120, 30, 255) 0%, rgba(188,0,255,1) 70%);
+  --secondary-color: #FFD700;
+  --text-color: #fff;
+  --bg-page: #fff;
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+p {
+  margin-bottom: 0rem !important;
+}
