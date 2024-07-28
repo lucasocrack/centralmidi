@@ -1,0 +1,92 @@
+<div class="sign-in-area">
+    <div class="d-table">
+        <div class="d-table-cell">
+            <div
+                class="default-form ml-auto mr-auto border-radius bg-white"
+                [class.component-dark-theme]="themeService.isDark()"
+            >
+                <div class="title text-center">
+                    <h3>
+                        Sign In
+                    </h3>
+                    <p class="text-black">
+                        Don’t have an account yet? <a routerLink="/authentication/sign-up" class="text-default">Sign Up</a>
+                    </p>
+                </div>
+                <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                    <div class="form-group">
+                        <label class="main-label d-block lh-1 text-black">
+                            Email Address
+                        </label>
+                        <mat-form-field>
+                            <mat-label>
+                                Enter email address
+                            </mat-label>
+                            <input matInput [formControl]="form.controls.identifier" type="string" id="email">
+                        </mat-form-field>
+                        <div class="error text-danger" *ngIf="form.controls.identifier.hasError('required') && form.controls.identifier.touched">
+                            Email is required.
+                        </div>
+                        <div class="error text-danger" *ngIf="form.controls.identifier.hasError('email') && form.controls.identifier.touched">
+                            Please enter a valid email address.
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="main-label d-block lh-1 text-black">
+                            Your Password
+                        </label>
+                        <mat-form-field>
+                            <mat-label>
+                                Enter your password
+                            </mat-label>
+                            <input matInput [formControl]="form.controls.password" [type]="hide ? 'password' : 'text'" id="password">
+                            <button mat-icon-button matSuffix (click)="hide = !hide" [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hide">
+                                <span class="material-symbols-outlined">
+                                    {{hide ? 'visibility_off' : 'visibility'}}
+                                </span>
+                            </button>
+                        </mat-form-field>
+                        <div class="error text-danger" *ngIf="form.controls.password.hasError('required') && form.controls.password.touched">
+                            Password is required.
+                        </div>
+                        <div class="error text-danger" *ngIf="form.controls.password.hasError('minlength') && form.controls.password.touched">
+                            Password must be at least 8 characters long.
+                        </div>
+                    </div>
+                    <div class="info d-flex justify-content-between align-items-center">
+                        <mat-checkbox>
+                            Remember me
+                        </mat-checkbox>
+                        <a routerLink="/authentication/forgot-password" class="d-inline-block text-default">
+                            Forgot Password?
+                        </a>
+                    </div>
+                    <button mat-button class="btn" type="submit" [disabled]="form.invalid" (click)="onSave()">
+                        Sign In
+                    </button>
+                    <div class="signin-with-socials text-center">
+                        <div class="or position-relative">
+                            <span class="d-inline-block">
+                                or sign in with
+                            </span>
+                        </div>
+                        <div class="socials">
+                            <button mat-button type="button" class="facebook">
+                                <i class="ri-facebook-fill"></i>
+                            </button>
+                            <button mat-button type="button" class="twitter">
+                                <i class="ri-twitter-x-fill"></i>
+                            </button>
+                            <button mat-button type="button" class="google">
+                                <i class="ri-google-fill"></i>
+                            </button>
+                            <button mat-button type="button" class="linkedin">
+                                <i class="ri-linkedin-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

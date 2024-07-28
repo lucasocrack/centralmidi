@@ -50,6 +50,7 @@ model Midis {
   titulo    String
   artista   String
   genero    String
+  nacional  Boolean
   url       String
   valor     Decimal  @default(0.00) @db.Decimal(5, 2)
   createdAt DateTime @default(now())

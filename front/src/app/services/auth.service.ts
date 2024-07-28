@@ -20,6 +20,6 @@ export class AuthService {
 
   constructor() {}
   login(payload: AuthLoginDto) {
-  return this.http.post<AuthLoginResponse>(`${this.baseUrl}/auth/login`, payload);
+    return this.http.post<AuthLoginResponse>(`${this.baseUrl}/login`, payload);
   }
 }

@@ -1,14 +1,26 @@
 import { Routes } from '@angular/router';
-import { HomeComponent } from './site/home/home.component';
-import { AboutComponent } from './site/about/about.component';
-import { ContactComponent } from './site/contact/contact.component';
-import {LoginComponent} from "./site/login/login.component";
+import { PublicComponent } from './public/public.component';
+import { publicRoutes } from './public/public.routes';
+import { PrivateComponent } from './private/private.component';
+import { privateRoutes } from './private/private.routes';
+import { AuthenticationComponent } from './core/pages/authentication/authentication.component';
+import { authenticationRoutes } from './core/pages/authentication/authentication.routes';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'home', pathMatch: 'full' },
-  { path: 'home', component: HomeComponent},
-  { path: 'about', component: AboutComponent},
-  { path: 'contact', component: ContactComponent},
-  { path: 'login', component: LoginComponent},
-  { path: '**', redirectTo: 'not-found' }
+  {
+    path: 'public',
+    component: PublicComponent,
+    children: publicRoutes,
+  },
+  {
+    path: '',
+    component: PrivateComponent,
+    children: privateRoutes,
+  },
+  {
+    path: 'authentication',
+    component: AuthenticationComponent,
+    children: authenticationRoutes
+  },
+  { path: '**', redirectTo: '' },
 ];
