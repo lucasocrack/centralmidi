@@ -8,7 +8,7 @@ export interface AuthLoginDto {
 }
 
 export interface AuthLoginResponse {
-  accessToken: string;
+  access_token: string;
 }
 
 @Injectable({

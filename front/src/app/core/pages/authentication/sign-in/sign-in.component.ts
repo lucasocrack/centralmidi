@@ -11,16 +11,17 @@ import {AuthLoginDto, AuthService} from "../../../../services/auth.service";
 import {environment} from "../../../../../environment/environment";
 
 @Component({
-    selector: 'app-sign-in',
-    standalone: true,
-    imports: [RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatCheckboxModule, ReactiveFormsModule, NgIf],
-    templateUrl: './sign-in.component.html',
-    styleUrl: './sign-in.component.scss'
+  selector: 'app-sign-in',
+  standalone: true,
+  imports: [RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatCheckboxModule, ReactiveFormsModule, NgIf],
+  templateUrl: './sign-in.component.html',
+  styleUrl: './sign-in.component.scss'
 })
 export class SignInComponent implements OnInit {
 
   private authService = inject(AuthService);
   isToggled = false;
+  errorMessage: string | null = null;
 
   constructor(
     private router: Router,
@@ -44,13 +45,20 @@ export class SignInComponent implements OnInit {
 
     const payload = this.form.value as AuthLoginDto;
     this.authService.login(payload).subscribe({
-        next:(data) => {
-          localStorage.setItem(`${environment.localStorageKey}token`, data.accessToken);
-          console.log(data);
-        },
-        error:(error) => {
-          console.error(error);
+      next:(data) => {
+        localStorage.setItem(`${environment.localStorageKey}token`, data.access_token);
+        console.log(data);
+        this.errorMessage = null;
+        this.router.navigate(['/']);
+      },
+      error:(error) => {
+        if (error.status === 401) {
+          this.errorMessage = 'Usuário ou senha inválidos.';
+        } else {
+          this.errorMessage = 'Ocorreu um erro. Tente novamente mais tarde.';
         }
+        console.error(error);
+      }
       }
     );
   }
