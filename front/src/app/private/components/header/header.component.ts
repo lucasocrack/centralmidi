@@ -4,7 +4,7 @@ import { Component, HostListener } from '@angular/core';
 import { SidebarService } from '../sidebar/sidebar.service';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { CustomizerSettingsService } from '../customizer-settings/customizer-settings.service';
+import { CustomizerSettingsService } from '../../../shared/components/customizer-settings/customizer-settings.service';
 
 @Component({
     selector: 'app-header',

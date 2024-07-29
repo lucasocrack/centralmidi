@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Event, NavigationEnd, Router, RouterOutlet } from '@angular/router';
-import { SidebarService } from '../shared/components/sidebar/sidebar.service';
+import { SidebarService } from './components/sidebar/sidebar.service';
 import { CommonModule, NgClass, ViewportScroller } from '@angular/common';
 import { CustomizerSettingsService } from '../shared/components/customizer-settings/customizer-settings.service';
-import { SidebarComponent } from '../shared/components/sidebar/sidebar.component';
+import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { CustomizerSettingsComponent } from '../shared/components/customizer-settings/customizer-settings.component';
 import { FooterComponent } from '../shared/components/footer/footer.component';
 import { HeaderComponent } from './components/header/header.component';

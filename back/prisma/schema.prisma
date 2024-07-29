@@ -35,7 +35,7 @@ model Pessoa {
   celular      String?
   dateNasc     DateTime?
   observacoes  String?
-  inadiplente  Boolean    @default(false)
+  inativo      Boolean    @default(false)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   deletedAt    DateTime?
@@ -50,14 +50,29 @@ model Midis {
   titulo    String
   artista   String
   genero    String
-  nacional  Boolean
+  paisId    Int
   url       String
   valor     Decimal  @default(0.00) @db.Decimal(5, 2)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   active    Boolean  @default(true)
 
+  pais Pais @relation(fields: [paisId], references: [id])
+
   @@map("midis")
+}
+
+model Pais {
+  id        Int       @id @default(autoincrement())
+  nome      String
+  sigla     String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  Midis Midis[]
+
+  @@map("pais")
 }
 
 enum TipoPessoa {

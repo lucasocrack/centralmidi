@@ -8,12 +8,12 @@ import { authenticationRoutes } from './core/pages/authentication/authentication
 
 export const routes: Routes = [
   {
-    path: 'public',
+    path: '',
     component: PublicComponent,
     children: publicRoutes,
   },
   {
-    path: '',
+    path: 'panel',
     component: PrivateComponent,
     children: privateRoutes,
   },

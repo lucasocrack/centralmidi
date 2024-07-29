@@ -4,8 +4,8 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { RouterLink, RouterLinkActive, RouterModule } from '@angular/router';
 import { SidebarService } from './sidebar.service';
 import { NgClass } from '@angular/common';
-import { CustomizerSettingsService } from '../customizer-settings/customizer-settings.service';
-import { SidebarItems } from '../../types/commom.types';
+import { CustomizerSettingsService } from '../../../shared/components/customizer-settings/customizer-settings.service';
+import { SidebarItems } from '../../../shared/types/commom.types';
 @Component({
     selector: 'app-sidebar',
     standalone: true,
@@ -27,8 +27,8 @@ export class SidebarComponent {
     {
       title: 'PAGES',
       children: [
-        { title: 'Dashboard', icon: 'dashboard', route: '/' },
-        { title: 'Forms', icon: 'forum', route: '/forms' }
+        { title: 'Dashboard', icon: 'dashboard', route: '/panel' },
+        { title: 'Forms', icon: 'forum', route: '/panel/forms' }
       ]
     },
   ];
