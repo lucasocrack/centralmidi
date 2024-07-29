@@ -1,0 +1,21 @@
+meta {
+  name: login
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:5001/login
+  body: formUrlEncoded
+  auth: none
+}
+
+body:form-urlencoded {
+  identifier: lucas
+  password: A12345a@++
+}
+
+body:multipart-form {
+  identifier: lucas
+  password: A12345a@++
+}

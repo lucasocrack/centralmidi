@@ -1,0 +1,15 @@
+meta {
+  name: me
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:5001/user/me
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbHlyb3hidTgwMDAwbWRwN2piNWlmMHczIiwiZW1haWwiOiJiaGx1Y2FzY2FtcG9zQGdtYWlscy5jb20iLCJ1c2VybmFtZSI6Ikx1Y2FzIiwicm9sZSI6MSwiaWF0IjoxNzIyMjE4NTEzLCJleHAiOjE3MjI4MjMzMTN9.KsufFPG1yenTMJ7E7FNBAHTCOLemFd2dNWzsBESAMO0
+}

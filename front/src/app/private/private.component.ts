@@ -6,8 +6,8 @@ import { CustomizerSettingsService } from '../shared/components/customizer-setti
 import { SidebarComponent } from '../shared/components/sidebar/sidebar.component';
 import { CustomizerSettingsComponent } from '../shared/components/customizer-settings/customizer-settings.component';
 import { FooterComponent } from '../shared/components/footer/footer.component';
-import { HeaderComponent } from '../shared/components/header/header.component';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { HeaderComponent } from './components/header/header.component';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 type Question = {
   name: string;
@@ -23,12 +23,12 @@ type DynamicFormControls<T extends Question[]> = {
   selector: 'app-private',
   standalone: true,
   imports: [
-    RouterOutlet, 
-    CommonModule, 
-    SidebarComponent, 
-    HeaderComponent, 
-    FooterComponent, 
-    CustomizerSettingsComponent, 
+    RouterOutlet,
+    CommonModule,
+    SidebarComponent,
+    HeaderComponent,
+    FooterComponent,
+    CustomizerSettingsComponent,
     NgClass,
     ReactiveFormsModule
   ],
