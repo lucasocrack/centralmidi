@@ -14,29 +14,11 @@ import { CustomizerSettingsService } from '../../../shared/components/customizer
     styleUrl: './header.component.scss'
 })
 export class HeaderComponent {
-
-    // isSidebarToggled
-    isSidebarToggled = false;
-
-    // isToggled
-    isToggled = false;
-
+  
     constructor(
         private SidebarService: SidebarService,
         public themeService: CustomizerSettingsService
-    ) {
-        this.SidebarService.isSidebarToggled$.subscribe(isSidebarToggled => {
-            this.isSidebarToggled = isSidebarToggled;
-        });
-        this.themeService.isToggled$.subscribe(isToggled => {
-            this.isToggled = isToggled;
-        });
-    }
-
-    // Burger Menu Toggle
-    toggle() {
-        this.SidebarService.toggle();
-    }
+    ) {}
 
     // Header Sticky
     isSticky: boolean = false;

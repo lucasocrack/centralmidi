@@ -1,0 +1,11 @@
+:host {
+  #home {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 60vh;
+    .container {
+      width: 760px;
+    }
+  }
+}
