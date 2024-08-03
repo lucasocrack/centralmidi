@@ -1,13 +1,14 @@
 <header
-    class="header-area bg-white border-radius transition"
+    class="header-area bg-white border-radius transition container"
     [class.component-dark-theme]="themeService.isDark()"
     [class.hide-sidebar]="themeService.isHideSidebar()"
+    [class.sticky]="isSticky"
 >
     <div class="d-md-flex align-items-center justify-content-between">
 
 
       <a routerLink="/home" class="logo">
-        <img src="images/logo.svg" alt="CentralMidi">
+        <img src="images/cm/logo.png" alt="CentralMidi" width="180px">
       </a>
       <div class="header-left-side d-flex align-items-center">
         <form class="search-box position-relative">
