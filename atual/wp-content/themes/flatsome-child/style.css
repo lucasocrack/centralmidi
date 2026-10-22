@@ -6270,3 +6270,648 @@ body.single-product #main {
     }
 }
 
+/* ==========================================================================
+   MINHA CONTA (MY ACCOUNT) - DESACOPLADO E TOTALMENTE ADAPTÁVEL A TEMAS
+   ========================================================================== */
+
+/* 1. Header Exclusivo da Conta */
+.cm-account-header {
+    background: var(--cm-bg-surface);
+    border-bottom: 1px solid var(--cm-border-color);
+    padding: 38px 0;
+    margin-bottom: 35px;
+    transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+.cm-account-header-container {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.cm-account-header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cm-accent-primary);
+    background: var(--cm-accent-primary-subtle);
+    padding: 3px 10px;
+    border-radius: 9999px;
+    margin-bottom: 10px;
+}
+
+.cm-account-header-title {
+    font-size: 28px !important;
+    font-weight: 800 !important;
+    color: var(--cm-text-primary) !important;
+    margin: 0 0 6px 0 !important;
+    line-height: 1.2 !important;
+    text-transform: none !important;
+}
+
+.cm-account-header-subtitle {
+    font-size: 14px;
+    color: var(--cm-text-muted);
+    margin: 0 !important;
+    line-height: 1.5;
+}
+
+.cm-account-header-subtitle strong {
+    color: var(--cm-accent-primary);
+}
+
+.cm-account-logout-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    background: var(--cm-bg-card);
+    border: 1px solid var(--cm-border-color);
+    border-radius: 8px;
+    color: var(--cm-accent-danger) !important;
+    font-size: 13.5px;
+    font-weight: 700;
+    text-decoration: none !important;
+    transition: all 0.2s ease;
+}
+
+.cm-account-logout-btn:hover {
+    background: var(--cm-accent-danger);
+    color: #ffffff !important;
+    border-color: var(--cm-accent-danger);
+    transform: translateY(-1px);
+}
+
+/* 2. Layout da Minha Conta */
+.cm-my-account-page-wrapper {
+    max-width: 1240px;
+    margin: 0 auto 60px auto;
+    padding: 0 20px;
+}
+
+.cm-my-account-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+/* 3. Sidebar de Navegação da Conta */
+.cm-account-navigation {
+    position: sticky;
+    top: 90px;
+    z-index: 10;
+}
+
+.cm-account-nav-card {
+    background: var(--cm-bg-card);
+    border: 1px solid var(--cm-border-color);
+    border-radius: 14px;
+    padding: 12px;
+    box-shadow: var(--cm-shadow-card);
+}
+
+.cm-account-nav-list {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cm-account-nav-item {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.cm-account-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 9px;
+    text-decoration: none !important;
+    color: var(--cm-text-secondary) !important;
+    font-size: 13.5px;
+    font-weight: 600;
+    transition: all 0.18s ease;
+    border: 1px solid transparent;
+}
+
+.cm-account-nav-icon {
+    font-size: 18px;
+    color: var(--cm-text-muted);
+    transition: color 0.18s ease;
+    flex-shrink: 0;
+}
+
+.cm-account-nav-text {
+    flex: 1;
+}
+
+.cm-account-nav-arrow {
+    font-size: 16px;
+    color: var(--cm-text-muted);
+    opacity: 0.4;
+    transition: all 0.18s ease;
+}
+
+.cm-account-nav-link:hover {
+    background: var(--cm-bg-card-hover) !important;
+    color: var(--cm-accent-primary) !important;
+}
+
+.cm-account-nav-link:hover .cm-account-nav-icon,
+.cm-account-nav-link:hover .cm-account-nav-arrow {
+    color: var(--cm-accent-primary);
+    opacity: 1;
+}
+
+.cm-account-nav-item.is-active .cm-account-nav-link,
+.cm-account-nav-item.is-active a {
+    background: var(--cm-accent-primary-subtle) !important;
+    color: var(--cm-accent-primary) !important;
+    border-color: rgba(0, 210, 132, 0.25) !important;
+    font-weight: 700;
+}
+
+.cm-account-nav-item.is-active .cm-account-nav-icon,
+.cm-account-nav-item.is-active .cm-account-nav-arrow {
+    color: var(--cm-accent-primary) !important;
+    opacity: 1;
+}
+
+/* 4. Área Principal de Conteúdo */
+.cm-my-account-card {
+    background: var(--cm-bg-card);
+    border: 1px solid var(--cm-border-color);
+    border-radius: 14px;
+    padding: 32px 36px;
+    box-shadow: var(--cm-shadow-card);
+}
+
+/* 5. Dashboard do Usuário */
+.cm-dashboard-user-card {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding-bottom: 24px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--cm-border-subtle);
+}
+
+.cm-user-avatar {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    border: 2px solid var(--cm-accent-primary);
+    box-shadow: var(--cm-glow-primary);
+}
+
+.cm-user-welcome-title {
+    font-size: 21px !important;
+    font-weight: 800 !important;
+    color: var(--cm-text-primary) !important;
+    margin: 0 0 4px 0 !important;
+}
+
+.cm-user-email {
+    font-size: 13.5px;
+    color: var(--cm-text-muted);
+    margin: 0 !important;
+}
+
+/* Grid de Atalhos Rápidos */
+.cm-dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.cm-dashboard-tile {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+    background: var(--cm-bg-surface);
+    border: 1px solid var(--cm-border-subtle);
+    border-radius: 12px;
+    text-decoration: none !important;
+    transition: all 0.2s ease;
+}
+
+.cm-dashboard-tile:hover {
+    border-color: var(--cm-accent-primary);
+    background: var(--cm-bg-card-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--cm-shadow-hover);
+}
+
+.cm-dashboard-tile-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.cm-icon-orders {
+    background: rgba(0, 210, 132, 0.12);
+    color: #00d284;
+}
+
+.cm-icon-catalog {
+    background: rgba(56, 189, 248, 0.12);
+    color: #38bdf8;
+}
+
+.cm-icon-address {
+    background: rgba(245, 158, 11, 0.12);
+    color: #f59e0b;
+}
+
+.cm-icon-account {
+    background: rgba(168, 85, 247, 0.12);
+    color: #a855f7;
+}
+
+.cm-dashboard-tile-body {
+    flex: 1;
+}
+
+.cm-dashboard-tile-body h4 {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: var(--cm-text-primary) !important;
+    margin: 0 0 3px 0 !important;
+}
+
+.cm-dashboard-tile-body p {
+    font-size: 12px;
+    color: var(--cm-text-muted);
+    margin: 0 !important;
+    line-height: 1.35;
+}
+
+.cm-tile-link-icon {
+    font-size: 16px;
+    color: var(--cm-text-muted);
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.cm-dashboard-tile:hover .cm-tile-link-icon {
+    color: var(--cm-accent-primary);
+    transform: translateX(3px);
+}
+
+/* 6. Formulários e Tabelas do WooCommerce na Minha Conta */
+.cm-my-account-card table.shop_table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    width: 100% !important;
+    border: 1px solid var(--cm-border-color) !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    margin-bottom: 25px !important;
+}
+
+.cm-my-account-card table.shop_table th {
+    background: var(--cm-bg-surface) !important;
+    color: var(--cm-text-primary) !important;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    padding: 14px 16px !important;
+    border-bottom: 1px solid var(--cm-border-color) !important;
+}
+
+.cm-my-account-card table.shop_table td {
+    padding: 14px 16px !important;
+    color: var(--cm-text-secondary) !important;
+    font-size: 13.5px !important;
+    border-bottom: 1px solid var(--cm-border-subtle) !important;
+    background: var(--cm-bg-card) !important;
+}
+
+.cm-my-account-card table.shop_table tr:last-child td {
+    border-bottom: none !important;
+}
+
+.cm-my-account-card a.button,
+.cm-my-account-card .woocommerce-button {
+    background: var(--cm-accent-primary) !important;
+    color: var(--cm-text-inverse) !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 8px 16px !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+}
+
+.cm-my-account-card a.button:hover,
+.cm-my-account-card .woocommerce-button:hover {
+    background: var(--cm-accent-primary-hover) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Inputs de edição de endereço / dados da conta */
+.cm-my-account-card input[type="text"],
+.cm-my-account-card input[type="email"],
+.cm-my-account-card input[type="password"],
+.cm-my-account-card input[type="tel"],
+.cm-my-account-card select,
+.cm-my-account-card textarea {
+    background: var(--cm-bg-input) !important;
+    border: 1px solid var(--cm-border-color) !important;
+    color: var(--cm-text-primary) !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    box-shadow: none !important;
+    font-size: 14px !important;
+}
+
+.cm-my-account-card input:focus,
+.cm-my-account-card select:focus,
+.cm-my-account-card textarea:focus {
+    border-color: var(--cm-accent-primary) !important;
+    outline: none !important;
+}
+
+.cm-my-account-card label {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: var(--cm-text-secondary) !important;
+    margin-bottom: 6px !important;
+}
+
+/* 7. Tela de Login e Cadastro (Auth) */
+.cm-auth-wrapper {
+    max-width: 1060px;
+    margin: 0 auto 60px auto;
+    padding: 0 20px;
+}
+
+.cm-auth-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 30px;
+    align-items: stretch;
+}
+
+.cm-auth-card {
+    background: var(--cm-bg-card);
+    border: 1px solid var(--cm-border-color);
+    border-radius: 16px;
+    padding: 36px 32px;
+    box-shadow: var(--cm-shadow-card);
+    display: flex;
+    flex-direction: column;
+}
+
+.cm-auth-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cm-accent-primary);
+    background: var(--cm-accent-primary-subtle);
+    padding: 3px 10px;
+    border-radius: 9999px;
+    margin-bottom: 12px;
+}
+
+.cm-badge-register {
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.12);
+}
+
+.cm-auth-title {
+    font-size: 22px !important;
+    font-weight: 800 !important;
+    color: var(--cm-text-primary) !important;
+    margin: 0 0 6px 0 !important;
+}
+
+.cm-auth-desc {
+    font-size: 13.5px;
+    color: var(--cm-text-muted);
+    margin: 0 0 24px 0 !important;
+    line-height: 1.45;
+}
+
+.cm-auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1;
+}
+
+.cm-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cm-form-field label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--cm-text-secondary);
+}
+
+.cm-field-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.cm-forgot-password-link {
+    font-size: 12px;
+    color: var(--cm-accent-primary) !important;
+    text-decoration: none !important;
+}
+
+.cm-forgot-password-link:hover {
+    text-decoration: underline !important;
+}
+
+.cm-input-icon-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.cm-field-icon {
+    position: absolute;
+    left: 14px;
+    font-size: 17px;
+    color: var(--cm-text-muted);
+    pointer-events: none;
+}
+
+.cm-input {
+    width: 100% !important;
+    height: 44px !important;
+    padding: 0 14px 0 42px !important;
+    background: var(--cm-bg-input) !important;
+    border: 1px solid var(--cm-border-color) !important;
+    border-radius: 9px !important;
+    color: var(--cm-text-primary) !important;
+    font-size: 14px !important;
+    box-sizing: border-box !important;
+    box-shadow: none !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.cm-input:focus {
+    border-color: var(--cm-accent-primary) !important;
+    box-shadow: 0 0 0 3px var(--cm-accent-primary-subtle) !important;
+    outline: none !important;
+}
+
+.cm-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--cm-text-secondary);
+    cursor: pointer;
+}
+
+.cm-auth-form-actions {
+    margin-top: 8px;
+}
+
+.cm-btn-primary-auth {
+    width: 100% !important;
+    height: 46px !important;
+    background: var(--cm-accent-primary) !important;
+    color: var(--cm-text-inverse) !important;
+    border: none !important;
+    border-radius: 9px !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 4px 14px rgba(0, 210, 132, 0.25) !important;
+}
+
+.cm-btn-primary-auth:hover {
+    background: var(--cm-accent-primary-hover) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 20px rgba(0, 210, 132, 0.4) !important;
+}
+
+.cm-btn-secondary-auth {
+    width: 100% !important;
+    height: 46px !important;
+    background: #0284c7 !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 9px !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25) !important;
+}
+
+.cm-btn-secondary-auth:hover {
+    background: #0369a1 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 20px rgba(2, 132, 199, 0.4) !important;
+}
+
+.cm-register-notice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--cm-text-muted);
+    background: var(--cm-bg-surface);
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--cm-border-subtle);
+    margin: 4px 0 10px 0 !important;
+}
+
+/* 8. Responsividade da Minha Conta */
+@media (max-width: 900px) {
+    .cm-my-account-layout {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .cm-account-navigation {
+        position: static;
+    }
+
+    .cm-account-nav-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 6px;
+    }
+
+    .cm-dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cm-my-account-card {
+        padding: 22px 18px;
+    }
+
+    .cm-auth-card {
+        padding: 26px 20px;
+    }
+}
+
+@media (max-width: 600px) {
+    .cm-account-header-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .cm-account-header-title {
+        font-size: 22px !important;
+    }
+
+    .cm-account-nav-list {
+        grid-template-columns: 1fr;
+    }
+
+    .cm-auth-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+

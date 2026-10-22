@@ -535,6 +535,14 @@ maior risco aberto depois da migração.
 
 ## 2.5 Concluído desde então (mantido como registro)
 
+- **Desacoplar telas de Minha Conta do Flatsome (PENDENCIAS §2, passo 2)** — feito em 2026-10-22.
+  Criados templates próprios em `flatsome-child/woocommerce/myaccount/`:
+  - `header.php`: cabeçalho moderno da área do cliente, badge, título, subtítulo contextual e botão de logout em vermelho suave.
+  - `navigation.php`: menu vertical estilo card com ícones Remix Icon, indicador de ativo e suporte a tabs.
+  - `dashboard.php`: boas-vindas com avatar do usuário, dados cadastrais, banner de acesso rápido ao Painel Admin para administradores e grid de atalhos rápidos (Pedidos, Catálogo, Endereços, Dados).
+  - `form-login.php`: tela de autenticação e cadastro em grid moderno de 2 colunas, campos com ícones, labels limpos e botões primários/secundários modernos.
+  - `my-account.php`: estrutura de 2 colunas (sidebar fixa + conteúdo) desacoplada do tema pai.
+  - Estilização completa em `style.css` com tokens de tema Claro e Escuro, bordas suaves, tabelas e botões consistentes.
 - **Remover o plugin ACF do disco** — feito. `wp-content/plugins/advanced-custom-fields` não existe mais.
 - **`wp-content/object-cache.php` órfão do LiteSpeed** — feito. O arquivo não existe mais.
 - **Corrigir o `update_field()`** — feito. Nenhuma chamada a `get_field`/`update_field`/`the_field`/`has_field`
