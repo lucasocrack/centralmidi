@@ -5927,24 +5927,57 @@ body.single-product #main {
     gap: 6px;
 }
 
-.cm-product-artist strong {
-    color: var(--cm-text-primary);
+.cm-product-artist-link {
+    text-decoration: none !important;
+    color: inherit;
+    transition: color 0.18s ease;
 }
 
-/* Bloco do Player Demo */
+.cm-product-artist-link strong {
+    color: var(--cm-text-primary);
+    transition: color 0.18s ease;
+}
+
+.cm-product-artist-link:hover strong {
+    color: var(--cm-accent-primary);
+}
+
+/* Bloco do Player Demo em Destaque (Mini-Player com Equalizador e Progresso) */
 .cm-product-player-box {
-    background: var(--cm-bg-card-alt);
-    border: 1px solid var(--cm-border-color);
-    border-radius: 12px;
-    padding: 18px 20px;
-    margin-bottom: 24px;
+    display: block !important;
+    grid-template-columns: none !important;
+    background: var(--cm-bg-card-alt) !important;
+    border: 1px solid var(--cm-border-color) !important;
+    border-radius: 14px !important;
+    padding: 20px 22px !important;
+    margin-bottom: 24px !important;
+    position: relative !important;
+    overflow: hidden !important;
+    min-height: auto !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    transition: all 0.25s ease !important;
+}
+
+.cm-product-player-box:hover {
+    transform: none !important;
+    border-color: rgba(0, 210, 132, 0.3) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+}
+
+.cm-product-player-box.playing {
+    border-color: rgba(0, 210, 132, 0.45) !important;
+    box-shadow: 0 6px 24px rgba(0, 210, 132, 0.12) !important;
+    animation: none !important;
 }
 
 .cm-player-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--cm-border-subtle);
 }
 
 .cm-player-tag {
@@ -5954,22 +5987,73 @@ body.single-product #main {
     display: flex;
     align-items: center;
     gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.cm-player-live-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .cm-player-hint {
-    font-size: 11.5px;
+    font-size: 12px;
     color: var(--cm-text-muted);
 }
 
-.cm-player-controls-wrap {
+/* Animação de Barrinhas de Áudio / Equalizador */
+.cm-audio-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2.5px;
+    height: 14px;
+    opacity: 0.35;
+    transition: opacity 0.2s ease;
+}
+
+.cm-product-player-box.playing .cm-audio-bars {
+    opacity: 1;
+}
+
+.cm-audio-bars span {
+    display: block;
+    width: 3px;
+    height: 4px;
+    background: var(--cm-accent-primary);
+    border-radius: 2px;
+    transition: height 0.2s ease;
+}
+
+.cm-product-player-box.playing .cm-audio-bars span:nth-child(1) {
+    animation: cm-bar-bounce 0.8s ease-in-out infinite alternate;
+}
+.cm-product-player-box.playing .cm-audio-bars span:nth-child(2) {
+    animation: cm-bar-bounce 1.1s ease-in-out infinite alternate 0.2s;
+}
+.cm-product-player-box.playing .cm-audio-bars span:nth-child(3) {
+    animation: cm-bar-bounce 0.9s ease-in-out infinite alternate 0.4s;
+}
+.cm-product-player-box.playing .cm-audio-bars span:nth-child(4) {
+    animation: cm-bar-bounce 1.2s ease-in-out infinite alternate 0.1s;
+}
+
+@keyframes cm-bar-bounce {
+    0% { height: 3px; }
+    50% { height: 14px; }
+    100% { height: 6px; }
+}
+
+/* Corpo e Controles do Player */
+.cm-player-body {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 18px;
 }
 
 .cm-single-play-btn {
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
     background: var(--cm-accent-primary) !important;
     color: var(--cm-text-inverse) !important;
@@ -5979,32 +6063,120 @@ body.single-product #main {
     justify-content: center;
     font-size: 24px;
     cursor: pointer;
-    box-shadow: 0 4px 14px rgba(0, 210, 132, 0.4);
-    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px rgba(0, 210, 132, 0.35);
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     flex-shrink: 0;
 }
 
 .cm-single-play-btn:hover {
     background: var(--cm-accent-primary-hover) !important;
-    transform: scale(1.06);
-    box-shadow: 0 6px 18px rgba(0, 210, 132, 0.55);
+    transform: scale(1.08);
+    box-shadow: 0 6px 20px rgba(0, 210, 132, 0.5);
 }
 
-.cm-player-track-info {
+.cm-product-player-box.playing .cm-single-play-btn {
+    animation: cm-pulse-ring 2s infinite cubic-bezier(0.25, 0, 0, 1);
+}
+
+@keyframes cm-pulse-ring {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 210, 132, 0.5), 0 4px 14px rgba(0, 210, 132, 0.35);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(0, 210, 132, 0), 0 4px 14px rgba(0, 210, 132, 0.35);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 210, 132, 0), 0 4px 14px rgba(0, 210, 132, 0.35);
+    }
+}
+
+.cm-player-main-col {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 8px;
+    min-width: 0;
 }
 
-.cm-track-title-preview {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--cm-text-primary);
+.cm-player-track-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12.5px;
 }
 
 .cm-track-status-text {
+    font-weight: 600;
+    color: var(--cm-text-secondary);
+    transition: color 0.2s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cm-product-player-box.playing .cm-track-status-text {
+    color: var(--cm-accent-primary);
+}
+
+.cm-player-time {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-family: monospace, inherit;
     font-size: 12px;
+    font-weight: 700;
     color: var(--cm-text-muted);
+}
+
+.cm-product-player-cur {
+    color: var(--cm-text-primary);
+}
+
+/* Barra de Progresso Interativa */
+.cm-product-progress-wrap {
+    cursor: pointer;
+    padding: 6px 0;
+    outline: none;
+}
+
+.cm-product-progress-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--cm-border-subtle);
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+    transition: height 0.15s ease;
+}
+
+.cm-product-progress-wrap:hover .cm-product-progress-bar {
+    height: 8px;
+}
+
+.cm-product-progress-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #00d284, #00eb93);
+    border-radius: 999px;
+    position: relative;
+    transition: width 0.1s linear;
+}
+
+.cm-product-progress-handle {
+    display: none;
+    position: absolute;
+    right: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.cm-product-progress-wrap:hover .cm-product-progress-handle {
+    display: block;
 }
 
 /* Box RLM Oficial */
@@ -6375,7 +6547,11 @@ body.single-product #main {
 .cm-account-header-container {
     max-width: 1240px;
     margin: 0 auto;
-    padding: 0 20px;
+    /* Respiro superior (28px desktop / 18px mobile) DENTRO do bloco, como nas
+       demais páginas: a faixa .cm-account-header tem o padding-top zerado pela
+       regra genérica "body.page #main > div:first-child", então o espaço entre
+       o menu e o conteúdo (badge/título/subtítulo) é dado aqui. */
+    padding: 28px 20px 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -6990,6 +7166,7 @@ body.single-product #main {
     }
 
     .cm-account-header-container {
+        padding: 18px 20px 0;
         flex-direction: column;
         align-items: flex-start;
         gap: 14px;

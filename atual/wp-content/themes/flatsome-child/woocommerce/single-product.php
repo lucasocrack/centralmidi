@@ -28,12 +28,21 @@ while (have_posts()) : the_post();
     $artista_nome = $midi ? $midi['artista_nome'] : '';
 
     // Artista fallback via categorias se não vier do DB proprietário
-    if (empty($artista_nome)) {
-        $terms = get_the_terms($product_id, 'product_cat');
-        if (!empty($terms) && !is_wp_error($terms)) {
+    $artista_link = '';
+    $terms = get_the_terms($product_id, 'product_cat');
+    if (!empty($terms) && !is_wp_error($terms)) {
+        if (empty($artista_nome)) {
             $artista_nome = $terms[0]->name;
         }
+        $artista_link = get_term_link($terms[0]);
     }
+    if (empty($artista_link)) {
+        $artista_link = home_url('/artistas/');
+    }
+
+    // Título limpo e profissional (sem sufixos técnicos legados como MARIANA FAGUNDES/ ou #RLM)
+    $raw_title   = get_the_title();
+    $clean_title = function_exists('cmidi_clean_song_title') ? cmidi_clean_song_title($raw_title) : $raw_title;
 
     // Gênero musical
     $generos = get_the_terms($product_id, 'genero_musical');
@@ -59,10 +68,10 @@ while (have_posts()) : the_post();
             <a href="<?php echo esc_url(home_url('/midis/')); ?>">Catálogo de MIDIs</a>
             <?php if (!empty($artista_nome)) : ?>
                 <span class="cm-breadcrumb-sep"><i class="ri-arrow-right-s-line"></i></span>
-                <a href="<?php echo esc_url(home_url('/artistas/')); ?>"><?php echo esc_html($artista_nome); ?></a>
+                <a href="<?php echo esc_url($artista_link); ?>"><?php echo esc_html($artista_nome); ?></a>
             <?php endif; ?>
             <span class="cm-breadcrumb-sep"><i class="ri-arrow-right-s-line"></i></span>
-            <span class="cm-breadcrumb-current"><?php the_title(); ?></span>
+            <span class="cm-breadcrumb-current"><?php echo esc_html($clean_title); ?></span>
         </nav>
 
         <div class="cm-product-layout">
@@ -81,40 +90,72 @@ while (have_posts()) : the_post();
                         <?php endif; ?>
                     </div>
 
-                    <h1 class="cm-product-title"><?php the_title(); ?></h1>
+                    <h1 class="cm-product-title"><?php echo esc_html($clean_title); ?></h1>
 
                     <?php if (!empty($artista_nome)) : ?>
                         <div class="cm-product-artist">
-                            <i class="ri-user-star-line"></i> Artista: <strong><?php echo esc_html($artista_nome); ?></strong>
+                            <i class="ri-user-star-line"></i> Artista: 
+                            <a href="<?php echo esc_url($artista_link); ?>" class="cm-product-artist-link">
+                                <strong><?php echo esc_html($artista_nome); ?></strong>
+                            </a>
                         </div>
                     <?php endif; ?>
 
-                    <!-- Bloco do Player Demo em Destaque -->
+                    <!-- Bloco do Player Demo em Destaque Moderno -->
                     <?php if (!empty($audio_url)) : ?>
                         <div class="cm-product-player-box cm-track-card"
                              data-id="<?php echo esc_attr($product_id); ?>"
-                             data-title="<?php echo esc_attr(get_the_title()); ?>"
+                             data-title="<?php echo esc_attr($clean_title); ?>"
                              data-artist="<?php echo esc_attr($artista_nome ?: 'Central MIDI'); ?>"
                              data-url="<?php echo esc_url($permalink); ?>"
                              data-audio="<?php echo esc_url($audio_url); ?>">
+                            
                             <div class="cm-player-header">
-                                <span class="cm-player-tag"><i class="ri-volume-up-line"></i> Demonstração em Áudio</span>
-                                <span class="cm-player-hint">Ouça o preview antes de comprar</span>
+                                <span class="cm-player-tag">
+                                    <i class="ri-volume-up-line"></i> Demonstração em Áudio
+                                </span>
+                                <div class="cm-player-live-badge">
+                                    <div class="cm-audio-bars">
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                    </div>
+                                    <span class="cm-player-hint">Prévia com qualidade original</span>
+                                </div>
                             </div>
-                            <div class="cm-player-controls-wrap">
+
+                            <div class="cm-player-body">
                                 <button type="button" class="cm-single-play-btn cm-play-trigger"
                                         data-audio="<?php echo esc_url($audio_url); ?>"
                                         data-id="<?php echo esc_attr($product_id); ?>"
-                                        data-title="<?php echo esc_attr(get_the_title()); ?>"
+                                        data-title="<?php echo esc_attr($clean_title); ?>"
                                         data-artist="<?php echo esc_attr($artista_nome ?: 'Central MIDI'); ?>"
                                         data-url="<?php echo esc_url($permalink); ?>"
-                                        aria-label="Reproduzir demonstração de <?php echo esc_attr(get_the_title()); ?>">
+                                        aria-label="Reproduzir demonstração de <?php echo esc_attr($clean_title); ?>"
+                                        title="Reproduzir demonstração de <?php echo esc_attr($clean_title); ?>">
                                     <i class="ri-play-fill cm-icon-play"></i>
                                     <i class="ri-pause-fill cm-icon-pause" style="display: none;"></i>
                                 </button>
-                                <div class="cm-player-track-info">
-                                    <span class="cm-track-title-preview"><?php the_title(); ?></span>
-                                    <span class="cm-track-status-text">Clique para ouvir a demo</span>
+
+                                <div class="cm-player-main-col">
+                                    <div class="cm-player-track-meta">
+                                        <span class="cm-track-status-text">Clique para ouvir a demonstração</span>
+                                        <div class="cm-player-time">
+                                            <span class="cm-product-player-cur">00:00</span>
+                                            <span class="cm-product-player-sep">/</span>
+                                            <span class="cm-product-player-dur">--:--</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Barra de Progresso Interativa -->
+                                    <div class="cm-product-progress-wrap" role="slider" aria-label="Progresso da demonstração" tabindex="0">
+                                        <div class="cm-product-progress-bar">
+                                            <div class="cm-product-progress-fill">
+                                                <span class="cm-product-progress-handle"></span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

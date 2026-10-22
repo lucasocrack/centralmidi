@@ -119,6 +119,12 @@
         }
       }
     });
+
+    // Atualiza texto de status em mini-players de produto
+    var statusText = card.querySelector ? card.querySelector('.cm-track-status-text') : null;
+    if (statusText) {
+      statusText.textContent = isPlaying ? 'Reproduzindo demonstração...' : 'Clique para ouvir a demonstração';
+    }
   }
 
   function updateMediaSession(title, artist) {
@@ -542,27 +548,61 @@
       });
 
       audioElement.addEventListener('timeupdate', function() {
-        if (!isNaN(audioElement.duration) && progressBar && progressFill) {
+        if (!isNaN(audioElement.duration)) {
           var percent = (audioElement.currentTime / audioElement.duration) * 100;
-          progressFill.style.width = percent + '%';
-          if (currentTimeEl) currentTimeEl.textContent = formatTime(audioElement.currentTime);
-          if (durationTimeEl) durationTimeEl.textContent = formatTime(audioElement.duration);
+          if (progressBar && progressFill) {
+            progressFill.style.width = percent + '%';
+            if (currentTimeEl) currentTimeEl.textContent = formatTime(audioElement.currentTime);
+            if (durationTimeEl) durationTimeEl.textContent = formatTime(audioElement.duration);
+          }
+
+          // Atualiza o mini-player da página de produto se estiver tocando nele
+          if (currentCard && currentCard.classList.contains('cm-product-player-box')) {
+            var curEl = currentCard.querySelector('.cm-product-player-cur');
+            var durEl = currentCard.querySelector('.cm-product-player-dur');
+            var fillEl = currentCard.querySelector('.cm-product-progress-fill');
+            if (curEl) curEl.textContent = formatTime(audioElement.currentTime);
+            if (durEl) durEl.textContent = formatTime(audioElement.duration);
+            if (fillEl) fillEl.style.width = percent + '%';
+          }
         }
       });
 
       audioElement.addEventListener('loadedmetadata', function() {
         if (durationTimeEl) durationTimeEl.textContent = formatTime(audioElement.duration);
+        if (currentCard && currentCard.classList.contains('cm-product-player-box')) {
+          var durEl = currentCard.querySelector('.cm-product-player-dur');
+          if (durEl) durEl.textContent = formatTime(audioElement.duration);
+        }
       });
 
       audioElement.addEventListener('ended', function() {
         if (playlistQueue.length > 0 && queueIndex + 1 < playlistQueue.length) {
           playNextTrack();
         } else {
-          if (currentCard) setCardPlayingState(currentCard, false);
+          if (currentCard) {
+            setCardPlayingState(currentCard, false);
+            var fillEl = currentCard.querySelector('.cm-product-progress-fill');
+            var curEl = currentCard.querySelector('.cm-product-player-cur');
+            if (fillEl) fillEl.style.width = '0%';
+            if (curEl) curEl.textContent = '00:00';
+          }
           updatePlayIcon(false);
           if (progressFill) progressFill.style.width = '0%';
           if (currentTimeEl) currentTimeEl.textContent = '00:00';
         }
+      });
+    }
+
+    // Interação com barra de progresso do mini-player de produto
+    var productProgressWrap = document.querySelector('.cm-product-player-box .cm-product-progress-wrap');
+    if (productProgressWrap) {
+      productProgressWrap.addEventListener('click', function(e) {
+        if (!audioElement || isNaN(audioElement.duration) || audioElement.duration <= 0) return;
+        var rect = productProgressWrap.getBoundingClientRect();
+        var clickX = e.clientX - rect.left;
+        var ratio = Math.max(0, Math.min(1, clickX / rect.width));
+        audioElement.currentTime = ratio * audioElement.duration;
       });
     }
 
