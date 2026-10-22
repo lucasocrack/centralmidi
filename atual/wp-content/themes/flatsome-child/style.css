@@ -6367,8 +6367,8 @@ body.single-product #main {
 .cm-account-header {
     background: var(--cm-bg-surface);
     border-bottom: 1px solid var(--cm-border-color);
-    padding: 38px 0;
-    margin-bottom: 35px;
+    padding: 32px 0 28px 0;
+    margin-bottom: 30px;
     transition: background 0.25s ease, border-color 0.25s ease;
 }
 
@@ -6984,6 +6984,11 @@ body.single-product #main {
 }
 
 @media (max-width: 600px) {
+    .cm-account-header {
+        padding-top: 24px !important;
+        padding-bottom: 20px !important;
+    }
+
     .cm-account-header-container {
         flex-direction: column;
         align-items: flex-start;

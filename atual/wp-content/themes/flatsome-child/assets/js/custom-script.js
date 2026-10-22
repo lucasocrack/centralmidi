@@ -565,6 +565,15 @@
         }
       });
     }
+
+    // Auto-reprodução na página do produto se houver demo disponível
+    var singleProductBtn = document.querySelector('.cm-product-player-box .cm-single-play-btn');
+    if (singleProductBtn) {
+      setTimeout(function() {
+        var card = singleProductBtn.closest('.cm-track-card, .cm-product-player-box') || singleProductBtn;
+        playTrack(card);
+      }, 500);
+    }
   });
 
   window.addEventListener('beforeunload', function() {

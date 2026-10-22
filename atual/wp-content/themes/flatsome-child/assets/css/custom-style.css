@@ -3131,7 +3131,7 @@ a.mes-lancamento {
 .cm-footer-container {
     max-width: 1280px;
     margin: 0 auto;
-    padding: 60px 24px 40px;
+    padding: 88px 24px 64px;
 }
 
 .cm-footer-grid {
@@ -3362,7 +3362,7 @@ a.mes-lancamento {
 .cm-footer-bottom {
     background: #040508;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
-    padding: 20px 0;
+    padding: 28px 0;
 }
 
 .cm-bottom-content {
@@ -3534,7 +3534,7 @@ a.mes-lancamento {
 
 @media (max-width: 640px) {
     .cm-footer-container {
-        padding: 40px 16px 30px;
+        padding: 56px 16px 44px;
     }
     
     .cm-footer-grid {

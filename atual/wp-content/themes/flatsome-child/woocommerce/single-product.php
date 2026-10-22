@@ -91,7 +91,12 @@ while (have_posts()) : the_post();
 
                     <!-- Bloco do Player Demo em Destaque -->
                     <?php if (!empty($audio_url)) : ?>
-                        <div class="cm-product-player-box">
+                        <div class="cm-product-player-box cm-track-card"
+                             data-id="<?php echo esc_attr($product_id); ?>"
+                             data-title="<?php echo esc_attr(get_the_title()); ?>"
+                             data-artist="<?php echo esc_attr($artista_nome ?: 'Central MIDI'); ?>"
+                             data-url="<?php echo esc_url($permalink); ?>"
+                             data-audio="<?php echo esc_url($audio_url); ?>">
                             <div class="cm-player-header">
                                 <span class="cm-player-tag"><i class="ri-volume-up-line"></i> Demonstração em Áudio</span>
                                 <span class="cm-player-hint">Ouça o preview antes de comprar</span>
@@ -100,9 +105,12 @@ while (have_posts()) : the_post();
                                 <button type="button" class="cm-single-play-btn cm-play-trigger"
                                         data-audio="<?php echo esc_url($audio_url); ?>"
                                         data-id="<?php echo esc_attr($product_id); ?>"
+                                        data-title="<?php echo esc_attr(get_the_title()); ?>"
+                                        data-artist="<?php echo esc_attr($artista_nome ?: 'Central MIDI'); ?>"
+                                        data-url="<?php echo esc_url($permalink); ?>"
                                         aria-label="Reproduzir demonstração de <?php echo esc_attr(get_the_title()); ?>">
-                                    <i class="ri-play-fill cm-play-icon"></i>
-                                    <i class="ri-pause-fill cm-pause-icon" style="display: none;"></i>
+                                    <i class="ri-play-fill cm-icon-play"></i>
+                                    <i class="ri-pause-fill cm-icon-pause" style="display: none;"></i>
                                 </button>
                                 <div class="cm-player-track-info">
                                     <span class="cm-track-title-preview"><?php the_title(); ?></span>
@@ -217,22 +225,6 @@ while (have_posts()) : the_post();
         ?>
     </div>
 </div>
-
-<script>
-// Integração instantânea com a engine Howler/Audio existente
-document.addEventListener('DOMContentLoaded', function() {
-    var playBtn = document.querySelector('.cm-single-play-btn');
-    if (!playBtn) return;
-
-    playBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        var audio = this.getAttribute('data-audio');
-        if (audio && typeof playAudio === 'function') {
-            playAudio(audio, null, this);
-        }
-    });
-});
-</script>
 
 <?php
 endwhile;

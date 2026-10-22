@@ -38,7 +38,6 @@ $account_url  = function_exists('wc_get_page_permalink') ? wc_get_page_permalink
                 </p>
                 <div class="cm-footer-security">
                     <span class="cm-sec-badge"><i class="ri-shield-check-fill"></i> Compra 100% Segura</span>
-                    <span class="cm-sec-badge"><i class="ri-download-cloud-2-fill"></i> Download Imediato</span>
                 </div>
             </div>
 

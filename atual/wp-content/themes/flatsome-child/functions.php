@@ -134,6 +134,8 @@ function cmidi_fix_menu_links($items, $menu, $args) {
 // Desativa o menu mobile off-canvas antigo do Flatsome para usarmos nosso menu mobile Fullscreen próprio
 add_action('after_setup_theme', function() {
     remove_action('wp_footer', 'flatsome_mobile_menu', 7);
+    // Desativa os dashboard-links legados do Flatsome (já substituídos pela navegação lateral e grid moderno)
+    remove_action('woocommerce_account_dashboard', 'flatsome_my_account_dashboard');
 }, 20);
 
 // 2. Carrega CSS e scripts
