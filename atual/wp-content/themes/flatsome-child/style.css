@@ -216,6 +216,45 @@ html #wrapper {
     color: var(--cm-text-inverse) !important;
 }
 
+/* Ações da toolbar (catálogo, busca, taxonomias) */
+.cm-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Ordenação do catálogo de MIDIs (/midis/) */
+.cm-catalog-sort {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.cm-catalog-sort label {
+    font-size: 0.82rem;
+    color: var(--cm-text-muted);
+    white-space: nowrap;
+}
+
+.cm-catalog-sort select {
+    background: var(--cm-bg-card);
+    border: 1px solid var(--cm-border-subtle);
+    color: var(--cm-text-primary);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.86rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.cm-catalog-sort select:focus {
+    border-color: var(--cm-accent-primary);
+    outline: none;
+}
+
 /* ==========================================================================
    BARRA DE NAVEGAÇÃO PRINCIPAL MODERNA (#masthead) & TOPO AMPLO
    ========================================================================== */

@@ -128,7 +128,7 @@
             var parts = path.split('/');
             var letter = 'A';
 
-            if (parts.length >= 2 && (parts[0] === 'artistas' || parts[0] === 'midis')) {
+            if (parts.length >= 2 && parts[0] === 'artistas') {
                 letter = parts[1] === 'outros' ? '#' : parts[1].toUpperCase();
             }
 

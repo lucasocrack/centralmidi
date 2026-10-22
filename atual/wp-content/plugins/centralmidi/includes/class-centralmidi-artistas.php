@@ -2,7 +2,13 @@
 /**
  * Central MIDI - Catálogo e Navegação Unificada de Artistas (AJAX)
  *
- * Desacoplado do tema Flatsome. Gerencia URLs /artistas/, /midis/ e busca dinâmica.
+ * Desacoplado do tema Flatsome. Gerencia a URL /artistas/ (catálogo A-Z de
+ * artistas) e a busca dinâmica.
+ *
+ * IMPORTANTE: /midis/ NÃO é mais tratada aqui — é a loja WooCommerce
+ * (página "Midis") e mostra o catálogo completo de MIDIs. Quem servia as duas
+ * URLs com o catálogo de artistas era o `add_rewrite_rule('^midis/?$')`; ele foi
+ * removido em 2026-10-21 (ver HISTORICO-E-ARMADILHAS.md §2.1).
  */
 
 defined('ABSPATH') || exit;
@@ -29,10 +35,9 @@ class CentralMidi_Artistas {
     }
 
     public function register_rewrite_rules() {
+        // Somente /artistas/ e /artistas/<letra>/. /midis/ é a loja WooCommerce.
         add_rewrite_rule('^artistas/([^/]+)/?$', 'index.php?cmidi_letra=$matches[1]', 'top');
         add_rewrite_rule('^artistas/?$', 'index.php?cmidi_artistas=1', 'top');
-        add_rewrite_rule('^midis/([^/]+)/?$', 'index.php?cmidi_letra=$matches[1]', 'top');
-        add_rewrite_rule('^midis/?$', 'index.php?cmidi_artistas=1', 'top');
     }
 
     public function register_query_vars($vars) {
@@ -75,12 +80,13 @@ class CentralMidi_Artistas {
         $uri = isset($_SERVER['REQUEST_URI']) ? explode('?', $_SERVER['REQUEST_URI'])[0] : '';
         $path = trim(parse_url($uri, PHP_URL_PATH), '/');
 
-        // Bate com 'artistas', 'midis', 'artistas/X', 'midis/X'
-        if ($path === 'artistas' || $path === 'midis') {
+        // Bate com 'artistas' e 'artistas/X' (o catálogo A-Z).
+        // 'midis' NÃO entra aqui: essa URL é a loja WooCommerce.
+        if ($path === 'artistas') {
             return true;
         }
         $parts = explode('/', $path);
-        if (count($parts) === 2 && in_array($parts[0], array('artistas', 'midis'))) {
+        if (count($parts) === 2 && 'artistas' === $parts[0]) {
             return true;
         }
 
@@ -269,7 +275,7 @@ class CentralMidi_Artistas {
         if (empty($letra_req)) {
             $uri = isset($_SERVER['REQUEST_URI']) ? explode('?', $_SERVER['REQUEST_URI'])[0] : '';
             $parts = explode('/', trim(parse_url($uri, PHP_URL_PATH), '/'));
-            if (count($parts) === 2 && in_array($parts[0], array('artistas', 'midis'))) {
+            if (count($parts) === 2 && 'artistas' === $parts[0]) {
                 $letra_req = $parts[1];
             }
         }

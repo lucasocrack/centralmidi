@@ -478,22 +478,46 @@ light: `[data-theme="light"] .cm-track-card .cm-btn-buy` → `color: var(--cm-te
 `border-color: var(--cm-border-color)` (dark intocado). Player (`#cm-global-player`) continua
 escuro fixo e o botão dele (`#00dfa0`) é válido nos dois temas.
 
-## 2.1 Aberto — `/midis/`: catálogo de produtos vs. catálogo de artistas
+## 2.1 Resolvido — `/midis/`: catálogo de MIDIs (decidido 2026-10-21)
 
 O checklist original dizia: *"trocar o tema para `central-midi` e criar a página
 `[centralmidi_catalogo]`"*.
 
-**Estado atual (verificado 2026-09-28):** `/midis/` **não é mais vazia**.
-`class-centralmidi-artistas.php:90` (`handle_template_redirect`) roteia tanto
-`/artistas/` quanto `/midis/` para o catálogo A-Z de artistas — a página renderiza
-o diretório completo (testado ao vivo: "Artistas com a letra A"). O shortcode
-`[centralmidi_catalogo]` continua registrado mas **sem nenhuma página publicada**
-(0 ocorrências); `catalog_page_id()` devolve `0` e `catalog_url()` cai no
-fallback `home_url('/midis/')`.
+**Estado anterior (até 2026-10-21):** `/midis/` **não era vazia**, mas mostrava a
+coisa errada. `class-centralmidi-artistas.php` registrava **duas** regras de
+rewrite — `^artistas/?$` **e** `^midis/?$` — e as duas jogavam o catálogo A-Z de
+artistas. Ou seja: `/midis/` (que o próprio menu do site chama de "Todos os
+Midis — Catálogo completo e lançamentos") abria a lista de artistas, e o catálogo
+de produtos não existia em URL nenhuma.
 
-**Decisão em aberto:** o que `/midis/` deve servir — o **catálogo de produtos**
-(criar a página com `[centralmidi_catalogo]`) ou o **A-Z de artistas** (comportamento
-atual)? A grade de produtos hoje renderiza na home, não numa URL dedicada.
+**Decisão (usuário, 2026-10-21):** `/midis/` = **todos os MIDIs**;
+`/artistas/` = catálogo A-Z de artistas.
+
+**O que foi feito:**
+
+1. **Plugin** (`includes/class-centralmidi-artistas.php`): removidas as regras
+   `^midis/?$` e `^midis/([^/]+)/?$`; `is_artistas_page()` e `render_page()`
+   pararam de casar o caminho `midis`; `assets/js/artistas.js` (popstate) idem.
+   O A-Z continua só em `/artistas/` e `/artistas/<letra>/`.
+2. **Flush das regras** (não há `wp-cli` no container): `DELETE FROM wp_options
+   WHERE option_name='rewrite_rules'` — o WordPress regenera no request seguinte.
+3. **Tema**: `/midis/` é a página da loja WooCommerce ("Midis", id 9) e passou a
+   renderizar o catálogo nativo em `catalogo-midis.php` (novo), incluído por
+   `woocommerce/archive-product.php` quando `is_shop()`.
+   - hero + toolbar + `.cm-tracks-grid` + `card-midi.php` + paginação — o mesmo
+     componente das páginas de artista/gênero/mês;
+   - ordenação: `?ordem=nome` (A–Z, default), `nome-desc` (Z–A) e `data`
+     (mais recentes), aplicada em `pre_get_posts` (prioridade 20, **depois** do
+     WooCommerce, que vem na 10 e impõe `menu_order`);
+   - 20 por página (`pre_get_posts`, mesma página do item 3).
+4. **Shortcode `[centralmidi_catalogo]`** (plugin): continua registrado e
+   **sem página publicada** — é o código legado (CSS dark fixo, cards próprios,
+   `post__in` com 81 mil IDs). A implementação nova é `catalogo-midis.php`.
+
+**Armadilha:** a página 9 é a `woocommerce_shop_page_id`.while `category_base`
+das taxonomias é `/artistas` — as duas coisas se cruzam: o plugin sequestrava
+`/midis/` e o WooCommerce usava `/artistas/<letra>/<artista>/` para as
+categorias. Depois da mudança cada URL tem um dono só.
 
 ## 2.2 Aberto — remover os templates de taxonomia legados
 
@@ -653,3 +677,6 @@ O padding dos heroes (`.cm-search-hero`, `.cm-archive-hero`) caiu de 155 px para
 44 px (32 px ≤ 959 px, 24 px ≤ 549 px) e as cores foram tokenizadas em
 `assets/css/custom-style.css`.
 
+## 3.4 Catálogo de MIDIs em `/midis/`
+
+Ver §2.1 (decisão, implementação e armadilhas).

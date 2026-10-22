@@ -486,6 +486,33 @@ function cmidi_taxonomy_posts_per_page($query) {
     }
 }
 
+// 6.1 Catálogo da loja ("/midis/") — 20 por página + ordenação nativa.
+// Roda depois do WooCommerce (prioridade 10) para sobrepor o menu_order dele.
+add_action('pre_get_posts', 'cmidi_shop_catalog_query', 20);
+function cmidi_shop_catalog_query($query) {
+    if (is_admin() || !$query->is_main_query()) {
+        return;
+    }
+    if (!$query->is_post_type_archive('product') && !is_shop()) {
+        return;
+    }
+
+    $query->set('posts_per_page', 20);
+
+    $ordem = isset($_GET['ordem']) ? sanitize_key(wp_unslash($_GET['ordem'])) : 'nome';
+    if ('data' === $ordem) {
+        $query->set('cmidi_order_by_song', false);
+        $query->set('orderby', 'date');
+        $query->set('order', 'DESC');
+    } elseif ('nome-desc' === $ordem) {
+        $query->set('cmidi_order_by_song', true);
+        $query->set('order', 'DESC');
+    } else {
+        $query->set('cmidi_order_by_song', true);
+        $query->set('order', 'ASC');
+    }
+}
+
 // Ordena especificamente pelo NOME DA MÚSICA (parte após a barra '/')
 add_filter('posts_orderby', 'cmidi_sort_by_song_title', 20, 2);
 function cmidi_sort_by_song_title($orderby, $query) {

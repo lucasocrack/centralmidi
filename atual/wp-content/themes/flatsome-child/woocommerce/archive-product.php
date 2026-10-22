@@ -10,6 +10,12 @@ if ( is_search() ) {
     return;
 }
 
+// Loja ("/midis/") — catálogo completo de MIDIs no layout nativo do site.
+if ( is_shop() ) {
+    include get_stylesheet_directory() . '/catalogo-midis.php';
+    return;
+}
+
 get_header( 'shop' );
 
 wc_get_template_part( 'layouts/category', flatsome_option( 'category_sidebar' ) );
