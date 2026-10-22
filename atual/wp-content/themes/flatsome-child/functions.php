@@ -1626,4 +1626,188 @@ function cmidi_ajax_live_search() {
     ));
 }
 
+// =========================================================================
+// AJAX ACTIONS: CONCILIAÇÃO & AUDITORIA DE DEMOS (FERRAMENTAS ADMIN)
+// =========================================================================
+
+add_action('wp_ajax_cm_admin_audit_demos', 'cm_admin_audit_demos_ajax');
+function cm_admin_audit_demos_ajax() {
+    check_ajax_referer('pa_admin_nonce', '_wpnonce');
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Acesso não autorizado');
+    }
+
+    if (!class_exists('CentralMidi_DB')) {
+        wp_send_json_error('Classe CentralMidi_DB não encontrada');
+    }
+
+    $audit = CentralMidi_DB::audit_demos();
+    // Guarda em transient por 30 minutos para permitir correções sem re-scanear imediatamente
+    set_transient('cm_last_demo_audit', $audit, 1800);
+
+    wp_send_json_success($audit);
+}
+
+add_action('wp_ajax_cm_admin_apply_demo_fixes', 'cm_admin_apply_demo_fixes_ajax');
+function cm_admin_apply_demo_fixes_ajax() {
+    check_ajax_referer('pa_admin_nonce', '_wpnonce');
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Acesso não autorizado');
+    }
+
+    $audit = get_transient('cm_last_demo_audit');
+    
+    // Suporta tanto correção individual (passando id e suggested via POST) quanto em lote
+    $single_id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+    $single_sug = isset($_POST['suggested']) ? sanitize_text_field($_POST['suggested']) : '';
+
+    if ($single_id > 0 && !empty($single_sug)) {
+        $applied = CentralMidi_DB::apply_demo_fixes(array(
+            array('id' => $single_id, 'suggested' => $single_sug)
+        ));
+        wp_send_json_success(array(
+            'applied' => $applied,
+            'message' => "Vínculo corrigido com sucesso!",
+        ));
+    }
+
+    if (!$audit || empty($audit['fixable'])) {
+        wp_send_json_error('Nenhuma auditoria recente encontrada para aplicar correções.');
+    }
+
+    $applied = CentralMidi_DB::apply_demo_fixes($audit['fixable']);
+    delete_transient('cm_last_demo_audit');
+
+    wp_send_json_success(array(
+        'applied' => $applied,
+        'message' => "Foram corrigidos {$applied} vínculos com sucesso no banco de dados!",
+    ));
+}
+
+add_action('wp_ajax_cm_admin_create_product_from_orphan', 'cm_admin_create_product_from_orphan_ajax');
+function cm_admin_create_product_from_orphan_ajax() {
+    check_ajax_referer('pa_admin_nonce', '_wpnonce');
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Acesso não autorizado');
+    }
+
+    $path       = isset($_POST['path']) ? sanitize_text_field($_POST['path']) : '';
+    $title      = isset($_POST['title']) ? sanitize_text_field($_POST['title']) : '';
+    $artist_id  = isset($_POST['artist_id']) ? (int)$_POST['artist_id'] : 0;
+    $genre_id   = isset($_POST['genre_id']) ? (int)$_POST['genre_id'] : 0;
+    $mes_id     = isset($_POST['mes_id']) ? (int)$_POST['mes_id'] : 0;
+    $rlm        = isset($_POST['rlm']) ? cmidi_sanitize_classificacao($_POST['rlm']) : 'M';
+    $price      = isset($_POST['price']) ? sanitize_text_field($_POST['price']) : '15.00';
+
+    if (empty($path) || empty($title) || empty($artist_id)) {
+        wp_send_json_error('Caminho do arquivo, título da música e Artista são obrigatórios.');
+    }
+
+    // Obtém o nome do artista pelo termo product_cat
+    $artist_term = get_term($artist_id, 'product_cat');
+    if (!$artist_term || is_wp_error($artist_term)) {
+        wp_send_json_error('Artista inválido ou não encontrado.');
+    }
+    $artist_name = $artist_term->name;
+
+    // Monta o título canônico Central MIDI: "ARTISTA/Música"
+    $full_title = "{$artist_name}/{$title}";
+
+    // 1. Cria o Produto WooCommerce
+    $product_id = wp_insert_post(array(
+        'post_title'   => $full_title,
+        'post_type'    => 'product',
+        'post_status'  => 'publish',
+        'post_content' => '',
+    ));
+
+    if (is_wp_error($product_id) || !$product_id) {
+        wp_send_json_error('Falha ao criar o produto no WooCommerce.');
+    }
+
+    // Configura produto simples com preço
+    $price = is_numeric($price) ? number_format((float)$price, 2, '.', '') : '15.00';
+    update_post_meta($product_id, '_price', $price);
+    update_post_meta($product_id, '_regular_price', $price);
+    update_post_meta($product_id, '_virtual', 'yes');
+    update_post_meta($product_id, '_downloadable', 'yes');
+
+    // 2. Vincula Taxonomias do WooCommerce
+    wp_set_post_terms($product_id, array($artist_id), 'product_cat');
+    cmidi_sync_artista_meta($product_id, $artist_id);
+
+    if ($genre_id > 0) {
+        wp_set_post_terms($product_id, array($genre_id), 'genero_musical');
+        cmidi_sync_genero_meta($product_id, $genre_id);
+    }
+
+    if ($mes_id > 0) {
+        wp_set_post_terms($product_id, array($mes_id), 'mes_de_lancamento');
+        cmidi_sync_mes_meta($product_id, $mes_id);
+    }
+
+    // 3. Extrai Mês e Ano numéricos (ou do termo ou do próprio caminho /demos/MMYYYY/)
+    $num_mes = 0;
+    $num_ano = 0;
+    if (preg_match('#/demos/(\d{2})(\d{4})/#', $path, $m_path)) {
+        $num_mes = (int)$m_path[1];
+        $num_ano = (int)$m_path[2];
+    } else {
+        $num_mes = (int)date('n');
+        $num_ano = (int)date('Y');
+    }
+
+    // 4. Insere na tabela proprietária wp_centralmidi_midis
+    global $wpdb;
+
+    // Obtém artista_id da tabela wp_centralmidi_artistas
+    $row_artista = $wpdb->get_row($wpdb->prepare(
+        "SELECT id FROM wp_centralmidi_artistas WHERE nome = %s LIMIT 1",
+        $artist_name
+    ));
+    $cm_artista_id = $row_artista ? (int)$row_artista->id : null;
+
+    // Obtém genero_id da tabela wp_centralmidi_generos
+    $cm_genero_id = null;
+    if ($genre_id > 0) {
+        $term_gen = get_term($genre_id, 'genero_musical');
+        if ($term_gen && !is_wp_error($term_gen)) {
+            $row_gen = $wpdb->get_row($wpdb->prepare(
+                "SELECT id FROM wp_centralmidi_generos WHERE nome = %s LIMIT 1",
+                $term_gen->name
+            ));
+            if ($row_gen) {
+                $cm_genero_id = (int)$row_gen->id;
+            }
+        }
+    }
+
+    $now = current_time('mysql');
+    $wpdb->insert(
+        CentralMidi_DB::table_name(),
+        array(
+            'product_id'       => $product_id,
+            'artista_id'       => $cm_artista_id,
+            'genero_id'        => $cm_genero_id,
+            'mes_lancamento'   => $num_mes,
+            'ano_lancamento'   => $num_ano,
+            'classificacao'    => $rlm,
+            'publicado'        => 1,
+            'demo_audio'       => $path,
+            'demo_status'      => 'ok',
+            'demo_verified_at' => $now,
+            'created_at'       => $now,
+            'updated_at'       => $now,
+        ),
+        array('%d', '%d', '%d', '%d', '%d', '%s', '%d', '%s', '%s', '%s', '%s', '%s')
+    );
+
+    wp_send_json_success(array(
+        'product_id' => $product_id,
+        'edit_url'   => admin_url('post.php?post=' . $product_id . '&action=edit'),
+        'message'    => "Produto '{$full_title}' criado com sucesso! ID: {$product_id}",
+    ));
+}
+
+
 

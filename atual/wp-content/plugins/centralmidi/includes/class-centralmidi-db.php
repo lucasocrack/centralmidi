@@ -52,6 +52,8 @@ class CentralMidi_DB {
             classificacao VARCHAR(3) NOT NULL DEFAULT 'M',
             publicado TINYINT(1) NOT NULL DEFAULT 1,
             demo_audio VARCHAR(255) NOT NULL DEFAULT '',
+            demo_status VARCHAR(15) NOT NULL DEFAULT 'unverified',
+            demo_verified_at DATETIME NULL,
             created_at DATETIME NOT NULL,
             updated_at DATETIME NOT NULL,
             PRIMARY KEY  (id),
@@ -61,7 +63,8 @@ class CentralMidi_DB {
             KEY mes_lancamento (mes_lancamento),
             KEY ano_lancamento (ano_lancamento),
             KEY classificacao (classificacao),
-            KEY publicado (publicado)
+            KEY publicado (publicado),
+            KEY demo_status (demo_status)
         ) {$charset};";
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -1435,5 +1438,278 @@ class CentralMidi_DB {
             (int) $row->mes_lancamento,
             (int) $row->ano_lancamento
         );
+    }
+
+    /**
+     * Helper de normalização fonética/alfanumérica para reconciliação de nomes de arquivos
+     */
+    public static function normalize_filename($str) {
+        $str = rawurldecode((string)$str);
+        $str = html_entity_decode($str, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        // Translitera acentos para ASCII simples
+        if (function_exists('iconv')) {
+            $trans = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $str);
+            if ($trans !== false) {
+                $str = $trans;
+            }
+        }
+        $str = strtolower($str);
+        // Corrige bug legado 'demos' gerado por substituição cega
+        $str = str_replace('demos', 'demo', $str);
+        // Remove tudo que não for a-z ou 0-9
+        return preg_replace('/[^a-z0-9]/', '', $str);
+    }
+
+    /**
+     * Mapeia todos os arquivos MP3 físicos no disco da pasta /demos/
+     * Retorna array:
+     * - 'files': lista de caminhos relativos (ex: '/demos/arquivo.mp3')
+     * - 'normalized': mapa de hash alfanumérico normalizado -> lista de caminhos
+     */
+    public static function scan_physical_demos() {
+        $demos_dir = rtrim(ABSPATH, '/') . '/demos';
+        if (!is_dir($demos_dir)) {
+            return array('files' => array(), 'normalized' => array());
+        }
+
+        $files = array();
+        $normalized = array();
+
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($demos_dir, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::SELF_FIRST
+        );
+
+        $abs_len = strlen(rtrim(ABSPATH, '/'));
+
+        foreach ($iterator as $item) {
+            if ($item->isFile()) {
+                $ext = strtolower($item->getExtension());
+                if ($ext === 'mp3' || $ext === 'mid' || $ext === 'midi') {
+                    $path = $item->getPathname();
+                    $rel = substr($path, $abs_len);
+                    if ($rel[0] !== '/') {
+                        $rel = '/' . $rel;
+                    }
+                    $files[$rel] = true;
+
+                    $basename = $item->getBasename();
+                    $norm = self::normalize_filename($basename);
+                    if (!isset($normalized[$norm])) {
+                        $normalized[$norm] = array();
+                    }
+                    $normalized[$norm][] = $rel;
+                }
+            }
+        }
+
+        return array(
+            'files'      => $files,
+            'normalized' => $normalized,
+        );
+    }
+
+    /**
+     * Executa a auditoria completa de conciliação de demos entre o banco de dados e os arquivos físicos.
+     * Se $persist_status for true, grava no banco o demo_status ('ok' ou 'missing') e demo_verified_at.
+     */
+    public static function audit_demos($persist_status = true) {
+        global $wpdb;
+
+        // 1. Escaneia o disco
+        $scan = self::scan_physical_demos();
+        $disk_files = $scan['files'];
+        $disk_normalized = $scan['normalized'];
+
+        // 2. Busca todos os registros do banco com título do produto
+        $query = "SELECT m.id, m.product_id, p.post_title, m.demo_audio 
+                  FROM " . self::table_name() . " m 
+                  LEFT JOIN {$wpdb->posts} p ON p.ID = m.product_id";
+        $rows = $wpdb->get_results($query);
+
+        $total_midis = count($rows);
+        $matched_exact = 0;
+        $fixable = array();
+        $missing = array();
+        $used_files = array();
+        $ok_ids = array();
+        $missing_ids = array();
+
+        foreach ($rows as $row) {
+            $raw_path = (string)$row->demo_audio;
+            if ('' === $raw_path) {
+                $missing_ids[] = (int)$row->id;
+                $missing[] = array(
+                    'id'          => (int)$row->id,
+                    'product_id'  => (int)$row->product_id,
+                    'title'       => $row->post_title ? $row->post_title : '(Sem título)',
+                    'demo_audio'  => '',
+                    'reason'      => 'Vazio no banco',
+                );
+                continue;
+            }
+
+            // Normaliza URL absoluta se houver
+            $clean_path = str_replace('https://www.centralmidi.com.br', '', $raw_path);
+            $clean_path = str_replace('http://www.centralmidi.com.br', '', $clean_path);
+
+            // 1. Teste Exato Direto
+            if (isset($disk_files[$clean_path])) {
+                $matched_exact++;
+                $used_files[$clean_path] = true;
+                $ok_ids[] = (int)$row->id;
+                continue;
+            }
+
+            // 2. Teste com html_entity_decode + unquote (%5B -> [, &#039; -> ')
+            $unquoted = rawurldecode($clean_path);
+            $unquoted = html_entity_decode($unquoted, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            if (isset($disk_files[$unquoted])) {
+                $fixable[] = array(
+                    'id'          => (int)$row->id,
+                    'product_id'  => (int)$row->product_id,
+                    'title'       => $row->post_title ? $row->post_title : '(Sem título)',
+                    'current'     => $raw_path,
+                    'suggested'   => $unquoted,
+                    'match_type'  => 'decode',
+                );
+                $used_files[$unquoted] = true;
+                continue;
+            }
+
+            // 3. Teste por Basename / Fuzzy Matching
+            $basename = basename($unquoted);
+            $norm = self::normalize_filename($basename);
+            $candidates = isset($disk_normalized[$norm]) ? $disk_normalized[$norm] : array();
+
+            if (empty($candidates)) {
+                // Tenta sem 'demos' -> 'demo'
+                $norm_alt = self::normalize_filename(str_replace('demos', 'demo', $basename));
+                $candidates = isset($disk_normalized[$norm_alt]) ? $disk_normalized[$norm_alt] : array();
+            }
+
+            if (count($candidates) === 1) {
+                $sug = $candidates[0];
+                $fixable[] = array(
+                    'id'          => (int)$row->id,
+                    'product_id'  => (int)$row->product_id,
+                    'title'       => $row->post_title ? $row->post_title : '(Sem título)',
+                    'current'     => $raw_path,
+                    'suggested'   => $sug,
+                    'match_type'  => 'fuzzy',
+                );
+                $used_files[$sug] = true;
+            } else {
+                $missing_ids[] = (int)$row->id;
+                $missing[] = array(
+                    'id'          => (int)$row->id,
+                    'product_id'  => (int)$row->product_id,
+                    'title'       => $row->post_title ? $row->post_title : '(Sem título)',
+                    'demo_audio'  => $raw_path,
+                    'reason'      => count($candidates) > 1 ? 'Múltiplos candidatos' : 'Arquivo não encontrado no disco',
+                );
+            }
+        }
+
+        // 3. Persistência de status no banco em lotes eficientes (se solicitado)
+        if ($persist_status) {
+            $now = current_time('mysql');
+            $table = self::table_name();
+
+            // Grava 'ok' para os exatos
+            if (!empty($ok_ids)) {
+                $chunks = array_chunk($ok_ids, 2000);
+                foreach ($chunks as $chunk) {
+                    $id_list = implode(',', $chunk);
+                    $wpdb->query("UPDATE {$table} SET demo_status = 'ok', demo_verified_at = '{$now}' WHERE id IN ({$id_list})");
+                }
+            }
+
+            // Grava 'missing' para os não encontrados
+            if (!empty($missing_ids)) {
+                $chunks = array_chunk($missing_ids, 2000);
+                foreach ($chunks as $chunk) {
+                    $id_list = implode(',', $chunk);
+                    $wpdb->query("UPDATE {$table} SET demo_status = 'missing', demo_verified_at = '{$now}' WHERE id IN ({$id_list})");
+                }
+            }
+        }
+
+        // 4. Encontra arquivos órfãos (arquivos no disco não vinculados a nenhum MIDI)
+        $orphans = array();
+        foreach (array_keys($disk_files) as $fpath) {
+            if (!isset($used_files[$fpath])) {
+                $bname = basename($fpath);
+                // Tenta deduzir artista e música do nome do arquivo (ex: Artista_-_Musica.mp3)
+                $clean_bname = preg_replace('/\\.[^.\\s]{3,4}$/', '', $bname);
+                $clean_bname = str_replace('_', ' ', $clean_bname);
+                $parts = explode(' - ', $clean_bname, 2);
+                $deduced_artist = count($parts) === 2 ? trim($parts[0]) : '';
+                $deduced_title  = count($parts) === 2 ? trim($parts[1]) : $clean_bname;
+
+                $orphans[] = array(
+                    'path'           => $fpath,
+                    'filename'       => $bname,
+                    'url'            => home_url($fpath),
+                    'deduced_artist' => $deduced_artist,
+                    'deduced_title'  => $deduced_title,
+                );
+            }
+        }
+
+        return array(
+            'summary' => array(
+                'total_midis'     => $total_midis,
+                'total_disk_files'=> count($disk_files),
+                'matched_exact'   => $matched_exact,
+                'fixable_count'   => count($fixable),
+                'missing_count'   => count($missing),
+                'orphans_count'   => count($orphans),
+                'persisted'       => $persist_status,
+            ),
+            'fixable' => $fixable,
+            'missing' => $missing,
+            'orphans' => $orphans,
+        );
+    }
+
+    /**
+     * Aplica em lote as correções de caminhos identificadas e atualiza status para 'ok'
+     */
+    public static function apply_demo_fixes($fixes = array()) {
+        global $wpdb;
+
+        if (empty($fixes)) {
+            return 0;
+        }
+
+        $applied = 0;
+        $table = self::table_name();
+        $now = current_time('mysql');
+
+        foreach ($fixes as $fix) {
+            $id = isset($fix['id']) ? (int)$fix['id'] : 0;
+            $sug = isset($fix['suggested']) ? sanitize_text_field($fix['suggested']) : '';
+
+            if ($id > 0 && '' !== $sug) {
+                $res = $wpdb->update(
+                    $table,
+                    array(
+                        'demo_audio'       => $sug,
+                        'demo_status'      => 'ok',
+                        'demo_verified_at' => $now,
+                        'updated_at'       => $now
+                    ),
+                    array('id' => $id),
+                    array('%s', '%s', '%s', '%s'),
+                    array('%d')
+                );
+                if ($res !== false) {
+                    $applied++;
+                }
+            }
+        }
+
+        return $applied;
     }
 }

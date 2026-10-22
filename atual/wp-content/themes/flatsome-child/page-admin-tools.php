@@ -22,78 +22,91 @@ $nonce = wp_create_nonce('pa_admin_nonce');
       </transition>
 
       <div class="admin-header">
-        <div class="admin-header-top">
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-number">{{ stats.total }}</div>
-              <div class="stat-label">Total Produtos</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-number">{{ stats.withDemo }}</div>
-              <div class="stat-label">Com Demo</div>
-            </div>
-          </div>
-
-          <div class="actions-row">
-            <button @click="exportCSV" class="button" :disabled="isExporting">
-              {{ isExporting ? '⏳ Exportando...' : '📥 Exportar CSV' }}
-            </button>
-            <button @click="checkDuplicates" class="button" :disabled="isCheckingDupes">
-              {{ isCheckingDupes ? '⏳ Verificando...' : '🔍 Verificar Duplicidade' }}
-            </button>
-          </div>
-
-          <div class="prod-filters-row">
-            <select v-model="filters.filtro_artista" class="filtro-select">
-              <option value="">Artista: Todos</option>
-              <option v-for="t in taxonomies.product_cat" :key="t.id" :value="t.id">{{ t.name }}</option>
-            </select>
-            <select v-model="filters.filtro_genero" class="filtro-select">
-              <option value="">Gênero: Todos</option>
-              <option v-for="t in taxonomies.genero_musical" :key="t.id" :value="t.id">{{ t.name }}</option>
-            </select>
-            <select v-model="filters.filtro_mes" class="filtro-select">
-              <option value="">Mês: Todos</option>
-              <option v-for="t in taxonomies.mes_de_lancamento" :key="t.id" :value="t.id">{{ t.name }}</option>
-            </select>
-            <select v-model="filters.filtro_tipo" class="filtro-select">
-              <option value="">Tipo: Todos</option>
-              <option v-for="t in taxonomies.tipo" :key="t.id" :value="t.id">{{ t.name }}</option>
-            </select>
-            <select v-model="filters.filtro_demo" class="filtro-select">
-              <option value="all">Demo: Todos</option>
-              <option value="has">Demo: Com demo</option>
-              <option value="none">Demo: Sem demo</option>
-            </select>
-            <button @click="clearFilters" class="button button-sm" title="Limpar Filtros">✕</button>
-          </div>
+        <!-- Navegação de Abas -->
+        <div class="admin-tabs-nav">
+          <button type="button" class="tab-nav-btn" :class="{ 'is-active': activeTab === 'produtos' }" @click="activeTab = 'produtos'">
+            📦 Gestão de Produtos
+          </button>
+          <button type="button" class="tab-nav-btn" :class="{ 'is-active': activeTab === 'demos' }" @click="activeTab = 'demos'">
+            🎧 Conciliação de Demos & Órfãos
+            <span v-if="demoAudit && (demoAudit.summary.fixable_count > 0 || demoAudit.summary.orphans_count > 0)" class="tab-alert-badge">!</span>
+          </button>
         </div>
 
-        <div class="prod-search-row">
-          <div class="search-group" style="width: 25%;">
-            <span class="search-icon">🔗</span>
-            <input type="text" v-model="filters.filtro_demo_search" class="search-input" placeholder="Buscar URL demo..." @keyup.enter="loadProducts(1)">
-          </div>
-          
-          <div class="search-group grow">
-            <span class="search-icon">🎵</span>
-            <input type="text" v-model="filters.search" class="search-input" placeholder="Música..." @keyup.enter="loadProducts(1)">
+        <div v-show="activeTab === 'produtos'">
+          <div class="admin-header-top">
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-number">{{ stats.total }}</div>
+                <div class="stat-label">Total Produtos</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number">{{ stats.withDemo }}</div>
+                <div class="stat-label">Com Demo</div>
+              </div>
+            </div>
+
+            <div class="actions-row">
+              <button @click="exportCSV" class="button" :disabled="isExporting">
+                {{ isExporting ? '⏳ Exportando...' : '📥 Exportar CSV' }}
+              </button>
+              <button @click="checkDuplicates" class="button" :disabled="isCheckingDupes">
+                {{ isCheckingDupes ? '⏳ Verificando...' : '🔍 Verificar Duplicidade' }}
+              </button>
+            </div>
+
+            <div class="prod-filters-row">
+              <select v-model="filters.filtro_artista" class="filtro-select">
+                <option value="">Artista: Todos</option>
+                <option v-for="t in taxonomies.product_cat" :key="t.id" :value="t.id">{{ t.name }}</option>
+              </select>
+              <select v-model="filters.filtro_genero" class="filtro-select">
+                <option value="">Gênero: Todos</option>
+                <option v-for="t in taxonomies.genero_musical" :key="t.id" :value="t.id">{{ t.name }}</option>
+              </select>
+              <select v-model="filters.filtro_mes" class="filtro-select">
+                <option value="">Mês: Todos</option>
+                <option v-for="t in taxonomies.mes_de_lancamento" :key="t.id" :value="t.id">{{ t.name }}</option>
+              </select>
+              <select v-model="filters.filtro_tipo" class="filtro-select">
+                <option value="">Tipo: Todos</option>
+                <option v-for="t in taxonomies.tipo" :key="t.id" :value="t.id">{{ t.name }}</option>
+              </select>
+              <select v-model="filters.filtro_demo" class="filtro-select">
+                <option value="all">Demo: Todos</option>
+                <option value="has">Demo: Com demo</option>
+                <option value="none">Demo: Sem demo</option>
+              </select>
+              <button @click="clearFilters" class="button button-sm" title="Limpar Filtros">✕</button>
+            </div>
           </div>
 
-          <div class="search-group" style="width: 160px;">
-            <span class="search-icon">#</span>
-            <input type="number" v-model="filters.search_id" class="search-input" placeholder="ID" @keyup.enter="loadProducts(1)">
-          </div>
+          <div class="prod-search-row">
+            <div class="search-group" style="width: 25%;">
+              <span class="search-icon">🔗</span>
+              <input type="text" v-model="filters.filtro_demo_search" class="search-input" placeholder="Buscar URL demo..." @keyup.enter="loadProducts(1)">
+            </div>
+            
+            <div class="search-group grow">
+              <span class="search-icon">🎵</span>
+              <input type="text" v-model="filters.search" class="search-input" placeholder="Música..." @keyup.enter="loadProducts(1)">
+            </div>
 
-          <button @click="loadProducts(1)" class="button primary load-btn" :class="{loading: isLoading}">
-            <span>📦 Carregar</span>
-            <span class="total-badge">{{ totalProducts }}</span>
-          </button>
+            <div class="search-group" style="width: 160px;">
+              <span class="search-icon">#</span>
+              <input type="number" v-model="filters.search_id" class="search-input" placeholder="ID" @keyup.enter="loadProducts(1)">
+            </div>
+
+            <button @click="loadProducts(1)" class="button primary load-btn" :class="{loading: isLoading}">
+              <span>📦 Carregar</span>
+              <span class="total-badge">{{ totalProducts }}</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- ... -->
-
+      <!-- CONTEÚDO DA ABA 1: PRODUTOS -->
+      <div v-show="activeTab === 'produtos'">
       <div v-if="products.length" class="results-table-wrap" style="margin-top:8px; position: relative;">
         <!-- Overlay de Carregamento da Tabela -->
         <div v-if="isLoading" class="table-loading-overlay">
@@ -195,6 +208,204 @@ $nonce = wp_create_nonce('pa_admin_nonce');
             <option v-for="n in [5, 10, 15, 20, 50, 100]" :key="n" :value="n">{{ n }}</option>
           </select>
         </label>
+      </div>
+      </div>
+
+      <!-- CONTEÚDO DA ABA 2: CONCILIAÇÃO DE DEMOS & ÓRFÃOS -->
+      <div v-show="activeTab === 'demos'" class="demo-audit-wrapper">
+        <div class="audit-top-bar">
+          <div class="audit-intro">
+            <h3 style="margin: 0 0 6px 0; font-size: 18px; font-weight: 700;">🎧 Auditoria e Conciliação de Arquivos de Demonstração</h3>
+            <p style="margin: 0; color: #6b7280; font-size: 13.5px;">Varre a pasta física <code>/demos/</code> no disco e cruza com os caminhos registrados na tabela <code>wp_centralmidi_midis</code>.</p>
+          </div>
+          <button type="button" @click="runDemoAudit" class="button primary" :disabled="isAuditingDemos" style="height: 38px; display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
+            {{ isAuditingDemos ? '⏳ Escaneando Pasta /demos/... Aguarde' : '🔍 Iniciar Auditoria Completa' }}
+          </button>
+        </div>
+
+        <!-- Cards de Métricas da Auditoria -->
+        <div v-if="demoAudit" class="audit-summary-grid">
+          <div class="audit-card">
+            <div class="audit-card-val" style="color: #0284c7;">{{ demoAudit.summary.total_disk_files }}</div>
+            <div class="audit-card-label">Arquivos no Disco</div>
+          </div>
+          <div class="audit-card">
+            <div class="audit-card-val" style="color: #10b981;">{{ demoAudit.summary.matched_exact }}</div>
+            <div class="audit-card-label">Vínculos 100% OK</div>
+          </div>
+          <div class="audit-card" :class="{ 'card-warn': demoAudit.summary.fixable_count > 0 }">
+            <div class="audit-card-val" style="color: #f59e0b;">{{ demoAudit.summary.fixable_count }}</div>
+            <div class="audit-card-label">Vínculos Corrigíveis</div>
+          </div>
+          <div class="audit-card" :class="{ 'card-danger': demoAudit.summary.missing_count > 0 }">
+            <div class="audit-card-val" style="color: #ef4444;">{{ demoAudit.summary.missing_count }}</div>
+            <div class="audit-card-label">Sem Arquivo no Disco</div>
+          </div>
+          <div class="audit-card" :class="{ 'card-purple': demoAudit.summary.orphans_count > 0 }">
+            <div class="audit-card-val" style="color: #8b5cf6;">{{ demoAudit.summary.orphans_count }}</div>
+            <div class="audit-card-label">Arquivos Órfãos no Disco</div>
+          </div>
+        </div>
+
+        <!-- Seção 1: Vínculos Corrigíveis -->
+        <div v-if="demoAudit && demoAudit.fixable && demoAudit.fixable.length" class="audit-section-box">
+          <div class="section-box-header">
+            <div>
+              <h4 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 700; color: #d97706;">⚠️ Vínculos com Divergência Identificada ({{ demoAudit.fixable.length }} itens)</h4>
+              <p style="margin: 0; color: #6b7280; font-size: 13px;">O arquivo físico existe no disco mas o caminho no banco tem diferenças de URL-encode (<code>%5B</code>), HTML Entities (<code>&#039;</code>) ou subpastas.</p>
+            </div>
+            <button type="button" @click="applyDemoFixes" class="button primary" :disabled="isApplyingFixes" style="font-weight: 600;">
+              {{ isApplyingFixes ? '⏳ Aplicando Correções...' : '⚡ Corrigir Todos os ' + demoAudit.fixable.length + ' Vínculos Automaticamente' }}
+            </button>
+          </div>
+
+          <div class="audit-table-scroll">
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th style="width: 70px;">ID</th>
+                  <th>Produto</th>
+                  <th>Caminho Atual no Banco</th>
+                  <th>Caminho Real no Disco (Sugerido)</th>
+                  <th style="width: 90px;">Tipo</th>
+                  <th style="width: 120px; text-align: center;">Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(f, idx) in demoAudit.fixable.slice(0, 100)" :key="f.id">
+                  <td style="font-size: 11px;">{{ f.id }}</td>
+                  <td><strong>{{ f.title }}</strong></td>
+                  <td><code class="code-danger">{{ f.current }}</code></td>
+                  <td><code class="code-success">{{ f.suggested }}</code></td>
+                  <td><span class="badge-pill" :class="f.match_type">{{ f.match_type === 'decode' ? 'URL/HTML' : 'Fuzzy' }}</span></td>
+                  <td style="text-align: center;">
+                    <button type="button" class="button primary button-sm" @click="applySingleFix(f, idx)" :disabled="f.isFixing">
+                      {{ f.isFixing ? '⏳ Corrigindo...' : '✔️ Corrigir' }}
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p v-if="demoAudit.fixable.length > 100" class="table-more-hint">
+              Mostrando os primeiros 100 itens de {{ demoAudit.fixable.length }}. Você pode corrigir individualmente cada linha ou usar o botão superior para corrigir todos em lote.
+            </p>
+          </div>
+        </div>
+
+        <!-- Seção 2: Arquivos Órfãos no Disco (Sem Produto) -->
+        <div v-if="demoAudit && demoAudit.orphans && demoAudit.orphans.length" class="audit-section-box">
+          <div class="section-box-header">
+            <div>
+              <h4 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 700; color: #7c3aed;">📁 Arquivos Órfãos na Pasta <code>/demos/</code> ({{ demoAudit.orphans.length }} arquivos)</h4>
+              <p style="margin: 0; color: #6b7280; font-size: 13px;">Estes arquivos MP3 existem fisicamente no servidor mas nenhum produto aponta para eles. Você pode ouvi-los e criar o produto MIDI correspondente com 1 clique.</p>
+            </div>
+            <button type="button" @click="exportOrphansCSV" class="button">📥 Exportar Lista de Órfãos (CSV)</button>
+          </div>
+
+          <div class="audit-table-scroll">
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th style="width: 40px;">Áudio</th>
+                  <th style="width: 180px;">Arquivo Físico</th>
+                  <th style="width: 180px;">Artista</th>
+                  <th style="min-width: 180px;">Música</th>
+                  <th style="width: 140px;">Gênero</th>
+                  <th style="width: 90px;">Classif.</th>
+                  <th style="width: 80px;">Mês</th>
+                  <th style="width: 75px;">Preço</th>
+                  <th style="width: 110px;">Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(o, idx) in demoAudit.orphans.slice(0, 100)" :key="o.path">
+                  <td>
+                    <button type="button" @click="togglePlayPath(o.url)" class="btn-play" :class="{ playing: currentPlayingPath === o.url }">
+                      {{ currentPlayingPath === o.url ? '⏸' : '▶' }}
+                    </button>
+                  </td>
+                  <td>
+                    <code style="font-size: 11px; word-break: break-all;">{{ o.path }}</code>
+                  </td>
+                  <td>
+                    <select v-model="o.artist_id" class="prod-select" :disabled="o.isCreating" style="max-width: 190px;">
+                      <option value="">— Selecione o Artista —</option>
+                      <option v-for="a in taxonomies.product_cat" :key="a.id" :value="a.id">{{ a.name }}</option>
+                    </select>
+                  </td>
+                  <td>
+                    <input type="text" class="prod-input" v-model="o.deduced_title" placeholder="Título da Música" :disabled="o.isCreating">
+                  </td>
+                  <td>
+                    <select v-model="o.genre_id" class="prod-select" :disabled="o.isCreating">
+                      <option value="">— Selecione —</option>
+                      <option v-for="g in taxonomies.genero_musical" :key="g.id" :value="g.id">{{ g.name }}</option>
+                    </select>
+                  </td>
+                  <td>
+                    <select v-model="o.rlm" class="prod-select" :disabled="o.isCreating">
+                      <option value="M">M (Melodia)</option>
+                      <option value="L">L (Letra)</option>
+                      <option value="RLM">RLM (Ambos)</option>
+                    </select>
+                  </td>
+                  <td>
+                    <select v-model="o.mes_id" class="prod-select" :disabled="o.isCreating">
+                      <option value="">— Mês —</option>
+                      <option v-for="m in taxonomies.mes_de_lancamento" :key="m.id" :value="m.id">{{ m.name }}</option>
+                    </select>
+                  </td>
+                  <td>
+                    <input type="number" step="0.50" min="0" class="prod-input" v-model="o.price" style="width: 70px;" :disabled="o.isCreating">
+                  </td>
+                  <td>
+                    <button type="button" class="button primary button-sm" @click="createProductFromOrphan(o, idx)" :disabled="o.isCreating">
+                      {{ o.isCreating ? '⏳ Criando...' : '➕ Criar' }}
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p v-if="demoAudit.orphans.length > 100" class="table-more-hint">
+              Mostrando os primeiros 100 arquivos órfãos de {{ demoAudit.orphans.length }}.
+            </p>
+          </div>
+        </div>
+
+        <!-- Seção 3: Demos Faltantes no Disco -->
+        <div v-if="demoAudit && demoAudit.missing && demoAudit.missing.length" class="audit-section-box">
+          <div class="section-box-header">
+            <div>
+              <h4 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 700; color: #dc2626;">❌ Produtos sem Arquivo Físico no Disco ({{ demoAudit.missing.length }} itens)</h4>
+              <p style="margin: 0; color: #6b7280; font-size: 13px;">Estes produtos têm demo cadastrado no banco, mas o arquivo MP3 não foi encontrado na pasta <code>/demos/</code>.</p>
+            </div>
+            <button type="button" @click="exportMissingCSV" class="button">📥 Exportar Faltantes (CSV)</button>
+          </div>
+
+          <div class="audit-table-scroll">
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th style="width: 70px;">ID</th>
+                  <th style="width: 80px;">Prod ID</th>
+                  <th>Título do Produto</th>
+                  <th>Caminho Registrado</th>
+                  <th>Motivo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="m in demoAudit.missing.slice(0, 50)" :key="m.id">
+                  <td>{{ m.id }}</td>
+                  <td>{{ m.product_id }}</td>
+                  <td><strong>{{ m.title }}</strong></td>
+                  <td><code>{{ m.demo_audio }}</code></td>
+                  <td><span class="badge-pill danger">{{ m.reason }}</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
       <!-- Modal de Edição -->
@@ -338,6 +549,35 @@ label { color: #4b5563; font-weight: 500; font-size: 14px; display: inline-flex;
 .save-spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid #e5e7eb; border-top: 2px solid #69A24C; border-radius: 50%; animation: spin 1s linear infinite; margin-left: 6px; vertical-align: middle; }
 .is-disabled { opacity: 0.5; pointer-events: none; }
 .results-table.is-loading { opacity: 0.5; pointer-events: none; }
+
+/* Abas de Navegação */
+.admin-tabs-nav { display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 2px solid #e5e7eb; padding-bottom: 4px; }
+.tab-nav-btn { background: #f3f4f6; border: 1px solid #d1d5db; border-bottom: none; border-radius: 6px 6px 0 0; padding: 8px 16px; font-size: 13px; font-weight: 600; color: #4b5563; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }
+.tab-nav-btn:hover { background: #e5e7eb; color: #111827; }
+.tab-nav-btn.is-active { background: #69A24C; color: #ffffff; border-color: #69A24C; }
+.tab-alert-badge { background: #ef4444; color: #ffffff; font-size: 10px; font-weight: 800; border-radius: 50%; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; }
+
+/* Estilos da Aba de Conciliação de Demos */
+.demo-audit-wrapper { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-top: 8px; }
+.audit-top-bar { display: flex; justify-content: space-between; align-items: center; gap: 20px; border-bottom: 1px solid #e5e7eb; padding-bottom: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.audit-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.audit-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 16px; text-align: center; }
+.audit-card-val { font-size: 24px; font-weight: 800; line-height: 1.1; margin-bottom: 4px; }
+.audit-card-label { font-size: 11.5px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; }
+.card-warn { background: #fffbeb; border-color: #fde68a; }
+.card-danger { background: #fef2f2; border-color: #fecaca; }
+.card-purple { background: #f5f3ff; border-color: #ddd6fe; }
+
+.audit-section-box { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 18px 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.section-box-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
+.audit-table-scroll { max-height: 400px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 6px; }
+.code-danger { color: #dc2626; background: #fee2e2; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+.code-success { color: #059669; background: #d1fae5; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+.badge-pill { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; }
+.badge-pill.decode { background: #e0f2fe; color: #0369a1; }
+.badge-pill.fuzzy { background: #fef3c7; color: #b45309; }
+.badge-pill.danger { background: #fee2e2; color: #b91c1c; }
+.table-more-hint { font-size: 12px; color: #6b7280; font-style: italic; margin: 8px 4px 4px 4px; }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
@@ -348,6 +588,12 @@ const nonce = '<?php echo $nonce; ?>';
 new Vue({
   el: '#app',
   data: {
+    activeTab: 'produtos',
+    demoAudit: null,
+    isAuditingDemos: false,
+    isApplyingFixes: false,
+    currentPlayingPath: null,
+    audioPath: null,
     stats: { total: 0, withDemo: 0 },
     products: [],
     toast: { show: false, message: '', type: 'success' },
@@ -644,6 +890,199 @@ new Vue({
         this.currentPlayingId = p.id;
         this.audio.onended = () => { this.currentPlayingId = null; };
       }
+    },
+    togglePlayPath(url) {
+      if (this.currentPlayingPath === url) {
+        if (this.audioPath) this.audioPath.pause();
+        this.currentPlayingPath = null;
+      } else {
+        if (this.audioPath) this.audioPath.pause();
+        this.audioPath = new Audio(url);
+        this.audioPath.play();
+        this.currentPlayingPath = url;
+        this.audioPath.onended = () => { this.currentPlayingPath = null; };
+      }
+    },
+    buscarArtistaOrphan(orphan) {
+      clearTimeout(orphan._timerArtista);
+      const termo = (orphan.artist_busca || '').trim();
+      orphan.artist_opcoes = [];
+      if (termo.length < 2) return;
+      orphan._timerArtista = setTimeout(async () => {
+        const data = await this.callApi('pa_admin_buscar_artistas', { termo });
+        if (data && data.success) {
+          this.$set(orphan, 'artist_opcoes', data.data);
+        }
+      }, 300);
+    },
+    escolherArtistaOrphan(orphan, opt) {
+      orphan.artist_id = opt.id;
+      orphan.artist_busca = opt.name;
+      orphan.artist_opcoes = [];
+    },
+    limparArtistaOrphan(orphan) {
+      orphan.artist_id = '';
+      orphan.artist_busca = '';
+      orphan.artist_opcoes = [];
+    },
+    async runDemoAudit() {
+      this.isAuditingDemos = true;
+      try {
+        const res = await this.callApi('cm_admin_audit_demos');
+        if (res && res.success) {
+          const audit = res.data;
+          // Prepara campos reativos para cada órfão
+          if (audit.orphans && audit.orphans.length) {
+            audit.orphans.forEach(o => {
+              o.artist_id = '';
+              if (o.deduced_artist && this.taxonomies.product_cat) {
+                const normDeduced = o.deduced_artist.toLowerCase().trim();
+                const matched = this.taxonomies.product_cat.find(a => a.name.toLowerCase().trim() === normDeduced);
+                if (matched) {
+                  o.artist_id = matched.id;
+                }
+              }
+              o.genre_id = '';
+
+              // Dedução de RLM a partir do arquivo
+              const fn = (o.filename || '').toUpperCase();
+              if (fn.includes('RLM')) {
+                o.rlm = 'RLM';
+              } else if (fn.includes('_L.') || fn.endsWith('_L.MP3') || fn.includes('-L.') || fn.endsWith('-L.MP3')) {
+                o.rlm = 'L';
+              } else {
+                o.rlm = 'M';
+              }
+
+              // Dedução do mês se estiver em subpasta tipo demos/052024/ ou demos/2024/
+              o.mes_id = '';
+              const matchMonth = o.path.match(/demos\/(\d{2})(\d{4})\//i);
+              if (matchMonth && this.taxonomies.mes_de_lancamento) {
+                const mesNum = matchMonth[1];
+                const anoNum = matchMonth[2];
+                // Procura na taxonomia
+                const foundMes = this.taxonomies.mes_de_lancamento.find(m => {
+                  const mName = m.name.toLowerCase();
+                  return mName.includes(anoNum) && (mName.startsWith(mesNum) || m.slug.includes(mesNum + anoNum));
+                });
+                if (foundMes) {
+                  o.mes_id = foundMes.id;
+                }
+              }
+
+              o.price = '15.00';
+              o.isCreating = false;
+            });
+          }
+          this.demoAudit = audit;
+          this.showToast('Auditoria de demos concluída com sucesso!');
+        } else {
+          this.showToast(res.data || 'Erro ao auditar demos', 'error');
+        }
+      } catch (e) {
+        this.showToast('Erro de conexão ao auditar demos', 'error');
+      } finally {
+        this.isAuditingDemos = false;
+      }
+    },
+    async applyDemoFixes() {
+      if (!confirm(`Deseja aplicar automaticamente as correções nos ${this.demoAudit.fixable.length} vínculos identificados?`)) {
+        return;
+      }
+      this.isApplyingFixes = true;
+      try {
+        const res = await this.callApi('cm_admin_apply_demo_fixes');
+        if (res && res.success) {
+          this.showToast(res.data.message || 'Correções aplicadas com sucesso!');
+          // Re-executa auditoria para atualizar métricas
+          await this.runDemoAudit();
+          this.loadProducts(this.currentPage);
+        } else {
+          this.showToast(res.data || 'Erro ao aplicar correções', 'error');
+        }
+      } catch (e) {
+        this.showToast('Erro de conexão ao aplicar correções', 'error');
+      } finally {
+        this.isApplyingFixes = false;
+      }
+    },
+    async applySingleFix(item, index) {
+      this.$set(item, 'isFixing', true);
+      try {
+        const res = await this.callApi('cm_admin_apply_demo_fixes', {
+          id: item.id,
+          suggested: item.suggested
+        });
+        if (res && res.success) {
+          this.showToast('Vínculo corrigido!');
+          // Remove da lista de corrigíveis e incrementa os OKs
+          this.demoAudit.fixable.splice(index, 1);
+          this.demoAudit.summary.fixable_count--;
+          this.demoAudit.summary.matched_exact++;
+        } else {
+          this.showToast(res.data || 'Erro ao corrigir vínculo', 'error');
+        }
+      } catch (e) {
+        this.showToast('Erro de conexão ao corrigir vínculo', 'error');
+      } finally {
+        this.$set(item, 'isFixing', false);
+      }
+    },
+    async createProductFromOrphan(orphan, index) {
+      if (!orphan.deduced_title || !orphan.deduced_title.trim()) {
+        alert('Por favor, informe o título da música.');
+        return;
+      }
+      this.$set(orphan, 'isCreating', true);
+      try {
+        const res = await this.callApi('cm_admin_create_product_from_orphan', {
+          path: orphan.path,
+          title: orphan.deduced_title,
+          artist_id: orphan.artist_id || 0,
+          genre_id: orphan.genre_id || 0,
+          mes_id: orphan.mes_id || 0,
+          rlm: orphan.rlm || 'M',
+          price: orphan.price || '15.00'
+        });
+        if (res && res.success) {
+          this.showToast(res.data.message || 'Produto criado!');
+          // Remove da lista de órfãos
+          this.demoAudit.orphans.splice(index, 1);
+          this.demoAudit.summary.orphans_count--;
+          this.demoAudit.summary.matched_exact++;
+          this.demoAudit.summary.total_midis++;
+        } else {
+          this.showToast(res.data || 'Erro ao criar produto', 'error');
+        }
+      } catch (e) {
+        this.showToast('Erro de conexão ao criar produto', 'error');
+      } finally {
+        this.$set(orphan, 'isCreating', false);
+      }
+    },
+    exportOrphansCSV() {
+      if (!this.demoAudit || !this.demoAudit.orphans.length) return;
+      let csv = 'Caminho;Arquivo;Artista Sugerido;Música Sugerida;URL\n';
+      this.demoAudit.orphans.forEach(o => {
+        csv += `"${o.path}";"${o.filename}";"${o.deduced_artist}";"${o.deduced_title}";"${o.url}"\n`;
+      });
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `demos_orfaos_${Date.now()}.csv`;
+      a.click();
+    },
+    exportMissingCSV() {
+      if (!this.demoAudit || !this.demoAudit.missing.length) return;
+      let csv = 'ID MIDI;Product ID;Título;Caminho no Banco;Motivo\n';
+      this.demoAudit.missing.forEach(m => {
+        csv += `${m.id};${m.product_id};"${m.title}";"${m.demo_audio}";"${m.reason}"\n`;
+      });
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `demos_faltantes_no_disco_${Date.now()}.csv`;
+      a.click();
     },
     debounce(fn, ms) {
       let timer;
