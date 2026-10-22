@@ -85,20 +85,6 @@ function cmidi_fix_menu_links($items, $menu, $args) {
     return $items;
 }
 
-// Botão Alternador de Tema (Claro / Escuro) no menu superior
-add_action('flatsome_header_elements', 'cmidi_add_theme_toggle_header_element');
-function cmidi_add_theme_toggle_header_element($value) {
-    if ($value === 'cart') {
-        ?>
-        <li class="header-theme-toggle-item">
-            <button type="button" id="cmidi-theme-toggle-btn" class="cm-theme-toggle-btn" aria-label="Alternar modo claro e escuro" title="Alternar tema">
-                <i class="ri-moon-line cm-theme-icon-dark"></i>
-                <i class="ri-sun-line cm-theme-icon-light"></i>
-            </button>
-        </li>
-        <?php
-    }
-}
 
 // Desativa o menu mobile off-canvas antigo do Flatsome para usarmos nosso menu mobile Fullscreen próprio
 add_action('after_setup_theme', function() {
