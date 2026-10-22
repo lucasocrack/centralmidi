@@ -3,11 +3,56 @@
  * Central Midi Child Theme Functions - Versão Completa e Estável
  */
 
-// Remover Downloads do menu My Account
-add_filter( 'woocommerce_account_menu_items', 'cmidi_remove_downloads_menu', 99 );
-function cmidi_remove_downloads_menu( $menu_items ) {
+// Remover Downloads do menu My Account e adicionar link para o Painel Admin se for administrador
+add_filter( 'woocommerce_account_menu_items', 'cmidi_custom_account_menu_items', 99 );
+function cmidi_custom_account_menu_items( $menu_items ) {
     unset( $menu_items['downloads'] );
+
+    if ( current_user_can( 'manage_options' ) ) {
+        $new_items = array();
+        foreach ( $menu_items as $key => $label ) {
+            $new_items[ $key ] = $label;
+            // Insere logo após o Painel (dashboard)
+            if ( 'dashboard' === $key ) {
+                $new_items['ferramentas-admin'] = 'Painel Admin';
+            }
+        }
+        return $new_items;
+    }
+
     return $menu_items;
+}
+
+// Endpoint URL customizado para o link de Ferramentas Admin no My Account
+add_filter( 'woocommerce_get_endpoint_url', 'cmidi_custom_account_endpoint_url', 10, 4 );
+function cmidi_custom_account_endpoint_url( $url, $endpoint, $value, $permalink ) {
+    if ( 'ferramentas-admin' === $endpoint ) {
+        return home_url( '/ferramentas-admin/' );
+    }
+    return $url;
+}
+
+// Banner de Acesso Rápido no topo do Dashboard de Minha Conta para Administradores
+add_action( 'woocommerce_account_dashboard', 'cmidi_admin_dashboard_card', 5 );
+function cmidi_admin_dashboard_card() {
+    if ( ! current_user_can( 'manage_options' ) ) {
+        return;
+    }
+    ?>
+    <div class="cm-admin-account-banner">
+        <div class="cm-admin-account-icon">
+            <i class="ri-settings-4-fill"></i>
+        </div>
+        <div class="cm-admin-account-content">
+            <h4>Painel de Ferramentas Administrativas</h4>
+            <p>Gerencie o catálogo de MIDIs, imports em lote, correções de links e demos diretamente pelo painel dedicado.</p>
+        </div>
+        <a href="<?php echo esc_url( home_url( '/ferramentas-admin/' ) ); ?>" class="cm-admin-account-btn">
+            <span>Acessar Painel Admin</span>
+            <i class="ri-arrow-right-line"></i>
+        </a>
+    </div>
+    <?php
 }
 
 // 0. SEO Meta tags e Canonical
