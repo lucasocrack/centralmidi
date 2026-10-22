@@ -2617,21 +2617,21 @@ a.mes-lancamento {
 
 /* Hero Banner da Busca */
 .cm-search-hero {
-    background: linear-gradient(180deg, #141923 0%, #0c0f17 100%);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(180deg, var(--cm-bg-surface) 0%, var(--cm-bg-body) 100%);
+    border-bottom: 1px solid var(--cm-border-subtle);
     text-align: center;
-    padding: 45px 20px 35px;
-    margin-bottom: 35px;
-    border-radius: 0 0 20px 20px;
+    padding: 44px 20px 35px;
+    margin-bottom: 30px;
+    border-radius: 0 0 24px 24px;
 }
 
 .cm-search-badge {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: rgba(0, 210, 132, 0.12);
-    color: #00d284;
-    border: 1px solid rgba(0, 210, 132, 0.25);
+    background: var(--cm-accent-primary-subtle);
+    color: var(--cm-accent-primary);
+    border: 1px solid color-mix(in srgb, var(--cm-accent-primary) 30%, transparent);
     padding: 6px 14px;
     border-radius: 9999px;
     font-size: 0.82rem;
@@ -2642,17 +2642,17 @@ a.mes-lancamento {
 .cm-search-title {
     font-size: 2.1rem;
     font-weight: 800;
-    color: #f8fafc;
+    color: var(--cm-text-primary);
     margin: 0 0 10px;
     letter-spacing: -0.02em;
 }
 
 .cm-search-title strong {
-    color: #38bdf8;
+    color: var(--cm-accent-secondary);
 }
 
 .cm-search-subtitle {
-    color: #94a3b8;
+    color: var(--cm-text-muted);
     font-size: 1.05rem;
     margin: 0;
 }

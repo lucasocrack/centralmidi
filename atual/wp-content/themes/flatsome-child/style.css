@@ -953,13 +953,16 @@ body.search .shop-page-title {
     padding-right: 0 !important;
 }
 
-/* Hero das Páginas de Busca e Arquivos/Lançamentos (Compensa a barra de navegação transparente do Flatsome) */
+/* Hero das Páginas de Busca e Arquivos/Lançamentos
+   (o header do child é nativo e não sobrepõe o conteúdo — antes havia um
+   padding-top de 155px que compensava a navbar transparente do Flatsome e
+   sobrava como espaço em branco no topo de todas as páginas de arquivo) */
 .cm-search-hero,
 .cm-archive-hero {
     background: linear-gradient(180deg, var(--cm-bg-surface) 0%, var(--cm-bg-body) 100%) !important;
     border-bottom: 1px solid var(--cm-border-subtle) !important;
     text-align: center !important;
-    padding-top: 155px !important;
+    padding-top: 44px !important;
     padding-bottom: 35px !important;
     padding-left: 20px !important;
     padding-right: 20px !important;
@@ -970,7 +973,7 @@ body.search .shop-page-title {
 @media (max-width: 959px) {
     .cm-search-hero,
     .cm-archive-hero {
-        padding-top: 125px !important;
+        padding-top: 32px !important;
         padding-bottom: 28px !important;
     }
 }
@@ -978,7 +981,7 @@ body.search .shop-page-title {
 @media (max-width: 549px) {
     .cm-search-hero,
     .cm-archive-hero {
-        padding-top: 105px !important;
+        padding-top: 24px !important;
         padding-bottom: 24px !important;
     }
 }
@@ -989,23 +992,106 @@ body.search .shop-page-title {
     padding-bottom: 60px !important;
 }
 
-/* Foto/Avatar do Artista no Hero da Categoria */
-.cm-artist-hero-thumb {
-    width: 90px;
-    height: 90px;
-    margin: 0 auto 16px;
-    border-radius: 50%;
-    overflow: hidden;
-    border: 3px solid rgba(0, 223, 160, 0.45);
-    box-shadow: 0 0 25px rgba(0, 223, 160, 0.25), 0 8px 20px rgba(0, 0, 0, 0.6);
-    background: #060b12;
+/* ==========================================================================
+   HERO DA PÁGINA DE ARTISTA — perfil (foto/avatar + nome + contagem)
+   ========================================================================== */
+.cm-artist-hero .shop-container {
+    text-align: left !important;
 }
 
-.cm-artist-hero-thumb img {
+.cm-artist-hero-inner {
+    max-width: 980px;
+    margin: 0 auto;
+}
+
+.cm-artist-profile {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.cm-artist-profile-media {
+    flex: 0 0 auto;
+    width: 112px;
+    height: 112px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--cm-bg-card-alt);
+    border: 3px solid var(--cm-accent-primary);
+    box-shadow: 0 0 26px rgba(0, 210, 132, 0.22), var(--cm-shadow-card);
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--cm-accent-primary);
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+}
+
+.cm-artist-profile-media img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
+}
+
+.cm-artist-profile-media i {
+    font-size: 2.6rem;
+    color: var(--cm-text-faint);
+}
+
+.cm-artist-profile-info {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.cm-artist-profile-info .cm-search-badge {
+    margin-bottom: 8px !important;
+}
+
+.cm-artist-profile-info .cm-search-title {
+    font-size: clamp(1.55rem, 3.4vw, 2.4rem) !important;
+    margin: 0 0 6px !important;
+}
+
+.cm-artist-profile-info .cm-search-subtitle {
+    font-size: 0.98rem !important;
+    margin: 0 !important;
+}
+
+.cm-artist-profile-info .cm-term-desc {
+    margin-top: 12px;
+    color: var(--cm-text-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    max-width: 72ch;
+}
+
+.cm-artist-profile-info .cm-term-desc p {
+    margin: 0 0 8px;
+}
+
+.cm-artist-profile-info .cm-term-desc p:last-child {
+    margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+    .cm-artist-profile {
+        flex-direction: column;
+        text-align: center !important;
+        gap: 14px;
+    }
+
+    .cm-artist-profile-info {
+        text-align: center !important;
+    }
+
+    .cm-artist-profile-info .cm-term-desc {
+        margin-left: auto;
+        margin-right: auto;
+    }
 }
 
 /* Loader do Scroll Infinito */
@@ -1383,9 +1469,10 @@ body.search .shop-page-title {
 }
 
 /* Tema claro: o card fica branco (var(--cm-bg-card)) e o botao "Comprar"
-   herdava texto/borda claros de custom-style.css -> ficava invisivel. */
-[data-theme="light"] .cm-track-card .cm-btn-buy,
-body.theme-light .cm-track-card .cm-btn-buy {
+   herdava texto/borda claros de custom-style.css -> ficava invisivel.
+   IMPORTANTE: :not(.in-cart-button) para não sobrescrever a cor de "No carrinho" */
+[data-theme="light"] .cm-track-card .cm-btn-buy:not(.in-cart-button),
+body.theme-light .cm-track-card .cm-btn-buy:not(.in-cart-button) {
     color: var(--cm-text-secondary) !important;
     border-color: var(--cm-border-color) !important;
 }
@@ -1395,19 +1482,42 @@ body.theme-light .cm-track-card .cm-btn-buy {
     box-shadow: 0 10px 30px rgba(0, 223, 160, 0.3) !important;
 }
 
-/* Quando o produto já estiver no carrinho: Botão Azul */
-.cm-btn-buy.in-cart-button {
+/* Quando o produto já estiver no carrinho: Botão Azul Elegante */
+.cm-btn-buy.in-cart-button,
+a.cm-btn-buy.in-cart-button {
     background: #1e293b !important;
     color: #38bdf8 !important;
     border: 1px solid #38bdf8 !important;
     box-shadow: 0 0 14px rgba(56, 189, 248, 0.25) !important;
 }
 
-.cm-btn-buy.in-cart-button:hover {
+.cm-btn-buy.in-cart-button:hover,
+a.cm-btn-buy.in-cart-button:hover {
     background: #38bdf8 !important;
     color: #090d16 !important;
     border-color: #38bdf8 !important;
     box-shadow: 0 0 20px rgba(56, 189, 248, 0.5) !important;
+}
+
+/* Tema Claro - Botão "No Carrinho" com contraste impecável e legibilidade perfeita */
+[data-theme="light"] .cm-track-card .cm-btn-buy.in-cart-button,
+[data-theme="light"] a.cm-btn-buy.in-cart-button,
+body.theme-light .cm-track-card .cm-btn-buy.in-cart-button,
+body.theme-light a.cm-btn-buy.in-cart-button {
+    background: #e0f2fe !important;
+    color: #0369a1 !important;
+    border: 1px solid #7dd3fc !important;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.15) !important;
+}
+
+[data-theme="light"] .cm-track-card .cm-btn-buy.in-cart-button:hover,
+[data-theme="light"] a.cm-btn-buy.in-cart-button:hover,
+body.theme-light .cm-track-card .cm-btn-buy.in-cart-button:hover,
+body.theme-light a.cm-btn-buy.in-cart-button:hover {
+    background: #0284c7 !important;
+    color: #ffffff !important;
+    border-color: #0284c7 !important;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35) !important;
 }
 
 /* Oculta o título duplicado em fundo claro nativo do Flatsome logo acima dos lançamentos */
@@ -3429,10 +3539,17 @@ body.page-id-119341 .section-title b {
 }
 
 .cm-nav-item.active .cm-nav-link,
-.cm-nav-link:hover {
+.cm-nav-link:hover,
+.cm-nav-item:hover > .cm-nav-link {
     background: var(--cm-bg-subtle) !important;
     color: var(--cm-accent-primary) !important;
     border-color: var(--cm-border-subtle);
+}
+
+.cm-nav-item.active .cm-nav-link *,
+.cm-nav-link:hover *,
+.cm-nav-item:hover > .cm-nav-link * {
+    color: var(--cm-accent-primary) !important;
 }
 
 .cm-arrow-icon {
@@ -3497,6 +3614,20 @@ body.page-id-119341 .section-title b {
 
 .cm-dropdown-menu a:hover {
     background: var(--cm-bg-card-hover) !important;
+    color: var(--cm-text-primary) !important;
+}
+
+.cm-dropdown-menu a:hover .cm-menu-text strong {
+    color: var(--cm-accent-primary) !important;
+}
+
+.cm-dropdown-menu a:hover .cm-menu-text span {
+    color: var(--cm-text-secondary) !important;
+}
+
+.cm-dropdown-menu a:hover .cm-menu-icon {
+    transform: scale(1.08);
+    transition: transform 0.2s ease;
 }
 
 .cm-menu-icon {
@@ -3622,12 +3753,13 @@ body.page-id-119341 .section-title b {
     font-weight: 700 !important;
 }
 
+/* Header sempre escuro - Mantém o valor do carrinho sempre claro no header */
 [data-theme="light"] .cm-cart-amount,
 [data-theme="light"] .cm-cart-amount *,
 [data-theme="light"] .cm-cart-amount .amount,
 body.theme-light .cm-cart-amount,
 body.theme-light .cm-cart-amount * {
-    color: var(--cm-text-primary) !important;
+    color: #ffffff !important;
 }
 
 .cm-cart-btn:hover .cm-cart-amount,
@@ -4536,6 +4668,228 @@ body.theme-light .cm-mobile-cart-val * {
 
 
 /* ==========================================================================
+   HEADER PERMANENTEMENTE ESCURO (MESMO EM TEMA CLARO)
+   O menu superior e seus elementos mantêm o visual escuro elegante em qualquer tema.
+   ========================================================================== */
+[data-theme="light"] .cm-top-bar,
+body.theme-light .cm-top-bar {
+    background: #080c13 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #94a3b8 !important;
+}
+
+[data-theme="light"] .cm-top-tagline,
+body.theme-light .cm-top-tagline {
+    color: #94a3b8 !important;
+}
+
+[data-theme="light"] .cm-top-tagline i,
+body.theme-light .cm-top-tagline i {
+    color: var(--cm-accent-primary) !important;
+}
+
+[data-theme="light"] .cm-top-link,
+body.theme-light .cm-top-link {
+    color: #f3f4f6 !important;
+}
+
+[data-theme="light"] .cm-top-link:hover,
+body.theme-light .cm-top-link:hover {
+    color: var(--cm-accent-primary) !important;
+}
+
+[data-theme="light"] .cm-social-icon,
+body.theme-light .cm-social-icon {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: #94a3b8 !important;
+}
+
+[data-theme="light"] .cm-social-icon:hover,
+body.theme-light .cm-social-icon:hover {
+    background: var(--cm-accent-primary) !important;
+    color: #ffffff !important;
+    border-color: var(--cm-accent-primary) !important;
+}
+
+[data-theme="light"] .cm-top-newsletter-btn,
+body.theme-light .cm-top-newsletter-btn {
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: #f3f4f6 !important;
+    background: transparent !important;
+}
+
+[data-theme="light"] .cm-top-newsletter-btn:hover,
+body.theme-light .cm-top-newsletter-btn:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+}
+
+[data-theme="light"] .cm-main-header,
+body.theme-light .cm-main-header {
+    background: #0b1120 !important;
+    border-bottom: 1px solid #1f2937 !important;
+}
+
+[data-theme="light"] .cm-nav-link,
+body.theme-light .cm-nav-link {
+    color: #f3f4f6 !important;
+}
+
+[data-theme="light"] .cm-nav-link:hover,
+body.theme-light .cm-nav-link:hover,
+[data-theme="light"] .cm-nav-item:hover > .cm-nav-link,
+body.theme-light .cm-nav-item:hover > .cm-nav-link,
+[data-theme="light"] .cm-nav-item.cm-has-dropdown:hover > .cm-nav-link,
+body.theme-light .cm-nav-item.cm-has-dropdown:hover > .cm-nav-link {
+    color: var(--cm-accent-primary) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+
+[data-theme="light"] .cm-nav-link:hover *,
+body.theme-light .cm-nav-link:hover *,
+[data-theme="light"] .cm-nav-item:hover > .cm-nav-link *,
+body.theme-light .cm-nav-item:hover > .cm-nav-link * {
+    color: var(--cm-accent-primary) !important;
+}
+
+[data-theme="light"] .cm-dropdown-menu,
+body.theme-light .cm-dropdown-menu {
+    background: #111827 !important;
+    border-color: #1f2937 !important;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="light"] .cm-dropdown-menu a,
+body.theme-light .cm-dropdown-menu a {
+    color: #ffffff !important;
+}
+
+[data-theme="light"] .cm-dropdown-menu a:hover,
+body.theme-light .cm-dropdown-menu a:hover {
+    background: #1e293b !important;
+    color: #ffffff !important;
+}
+
+[data-theme="light"] .cm-dropdown-menu a strong,
+body.theme-light .cm-dropdown-menu a strong,
+[data-theme="light"] .cm-menu-text strong,
+body.theme-light .cm-menu-text strong {
+    color: #ffffff !important;
+}
+
+[data-theme="light"] .cm-dropdown-menu a:hover .cm-menu-text strong,
+body.theme-light .cm-dropdown-menu a:hover .cm-menu-text strong {
+    color: var(--cm-accent-primary) !important;
+}
+
+[data-theme="light"] .cm-menu-text span,
+body.theme-light .cm-menu-text span {
+    color: #94a3b8 !important;
+}
+
+[data-theme="light"] .cm-dropdown-menu a:hover .cm-menu-text span,
+body.theme-light .cm-dropdown-menu a:hover .cm-menu-text span {
+    color: #f3f4f6 !important;
+}
+
+[data-theme="light"] .cm-dropdown-item,
+body.theme-light .cm-dropdown-item {
+    color: #ffffff !important;
+}
+
+[data-theme="light"] .cm-dropdown-item:hover,
+body.theme-light .cm-dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+[data-theme="light"] .cm-dropdown-item strong,
+body.theme-light .cm-dropdown-item strong,
+[data-theme="light"] .cm-menu-text strong,
+body.theme-light .cm-menu-text strong {
+    color: #ffffff !important;
+}
+
+[data-theme="light"] .cm-menu-text span,
+body.theme-light .cm-menu-text span {
+    color: #94a3b8 !important;
+}
+
+[data-theme="light"] .cm-dropdown-item i,
+body.theme-light .cm-dropdown-item i {
+    color: var(--cm-accent-primary) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+[data-theme="light"] .cm-action-btn,
+body.theme-light .cm-action-btn {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #f3f4f6 !important;
+}
+
+[data-theme="light"] .cm-action-btn:hover,
+body.theme-light .cm-action-btn:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+}
+
+[data-theme="light"] .cm-action-btn i,
+body.theme-light .cm-action-btn i {
+    color: inherit !important;
+}
+
+[data-theme="light"] .cm-cart-btn,
+body.theme-light .cm-cart-btn {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #f3f4f6 !important;
+}
+
+[data-theme="light"] .cm-cart-btn:hover,
+body.theme-light .cm-cart-btn:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="light"] .cm-quick-search-drawer,
+body.theme-light .cm-quick-search-drawer {
+    background: #0b1120 !important;
+    border-bottom: 1px solid #1f2937 !important;
+}
+
+[data-theme="light"] .cm-search-input-group,
+body.theme-light .cm-search-input-group {
+    background: #111827 !important;
+    border-color: #1f2937 !important;
+}
+
+[data-theme="light"] .cm-search-input-field,
+body.theme-light .cm-search-input-field {
+    color: #ffffff !important;
+}
+
+[data-theme="light"] .cm-search-input-field::placeholder,
+body.theme-light .cm-search-input-field::placeholder {
+    color: #94a3b8 !important;
+}
+
+[data-theme="light"] .cm-search-inline-icon,
+body.theme-light .cm-search-inline-icon {
+    color: #94a3b8 !important;
+}
+
+[data-theme="light"] .cm-hamburger-line,
+body.theme-light .cm-hamburger-line {
+    background: #ffffff !important;
+}
+
+[data-theme="light"] .cm-mobile-header,
+body.theme-light .cm-mobile-header {
+    background: #0b1120 !important;
+    border-bottom-color: #1f2937 !important;
+}
+
+/* ==========================================================================
    HOMEPAGE THEME TOGGLING (DARK & LIGHT)
    Garante que o fundo da home e todas as suas seções respeitem os temas
    ========================================================================== */
@@ -5290,8 +5644,10 @@ body.woocommerce-cart .woocommerce-notices-wrapper .woocommerce-info {
 
 /* ==========================================================================
    FIX: Espaçamento harmônico acima do conteúdo nas páginas internas
-   Afeta: /midis/, /artistas/, /midis-por-genero/ e páginas de catálogo
+   Afeta: /midis/, /artistas/, /servicos/ e demais páginas internas
    Elimina o gap excessivo de 120px do Flatsome e aplica espaçamento elegante (28px desktop / 18px mobile)
+   O #main ficou sem padding-top global (regra removida): cada layout aplica
+   o próprio respiro, então o conteúdo nunca encosta no header.
    ========================================================================== */
 
 /* 1. Neutraliza o padding-top excessivo do Flatsome (120px) em páginas transparent */
@@ -5305,11 +5661,6 @@ body:not(.woocommerce-cart):not(.woocommerce-checkout) #wrapper {
     padding-top: 0 !important;
 }
 
-/* 2. Aplica espaçamento mínimo elegante abaixo do header fixo/superior para não grudar */
-body:not(.home):not(.woocommerce-cart):not(.woocommerce-checkout) #main {
-    padding-top: 28px !important;
-}
-
 body:not(.home) #main > .cmidi-artistas-page-wrapper,
 body:not(.home) #main > #content,
 body.post-type-archive-product #main > div:first-child,
@@ -5320,19 +5671,53 @@ body.page #main > div:first-child {
     margin-top: 0 !important;
 }
 
-/* Reduz sutilmente em telas mobile */
+/* 2. Respiro superior (28px desktop / 18px mobile) DENTRO do bloco de
+   conteúdo — nunca como faixa entre o header e o conteúdo.
+   O padding fica dentro do próprio bloco, então o espaço herda a cor do
+   bloco (#f7f9fb na lista de artistas, #eef1f5 no conteúdo) e o topo da
+   página continua contínuo com o header, sem tarja de cor errada. */
+body:not(.home):not(.woocommerce-cart):not(.woocommerce-checkout):not(.woocommerce-account) #main > .cmidi-artistas-page-wrapper,
+body:not(.home):not(.woocommerce-cart):not(.woocommerce-checkout):not(.woocommerce-account) #main > #content {
+    padding-top: 28px !important;
+}
+
 @media (max-width: 600px) {
-    body:not(.home):not(.woocommerce-cart):not(.woocommerce-checkout) #main {
+    body:not(.home):not(.woocommerce-cart):not(.woocommerce-checkout):not(.woocommerce-account) #main > .cmidi-artistas-page-wrapper,
+    body:not(.home):not(.woocommerce-cart):not(.woocommerce-checkout):not(.woocommerce-account) #main > #content {
         padding-top: 18px !important;
     }
+}
+
+/* 3. Páginas UX Builder com hero de imagem em full-bleed (/servicos/):
+   o hero encosta no header (sem tarja cinza acima da foto). */
+body:not(.home) #main > #content:has(> .section:first-child .page-title) {
+    padding-top: 0 !important;
 }
 
 /* ==========================================================================
    PÁGINA INDIVIDUAL DO PRODUTO (SINGLE PRODUCT) - CENTRAL MIDI DARK/LIGHT
    100% autônoma, desacoplada do Flatsome UX Builder
    ========================================================================== */
+body.single-product {
+    background-color: var(--cm-bg-body) !important;
+}
+
+body.single-product #wrapper,
+body.single-product #main {
+    background-color: var(--cm-bg-body) !important;
+}
+
 .cm-single-product-page {
-    padding: 10px 0 60px 0;
+    padding: 20px 0 60px 0;
+}
+
+.cm-single-product-page .shop-container {
+    max-width: 1300px !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    box-sizing: border-box !important;
 }
 
 .cm-product-breadcrumb {
@@ -5744,6 +6129,11 @@ body.page #main > div:first-child {
 }
 
 @media (max-width: 600px) {
+    .cm-single-product-page .shop-container {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
     .cm-product-card-hero {
         padding: 20px 16px;
     }

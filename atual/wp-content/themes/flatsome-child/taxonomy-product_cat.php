@@ -18,17 +18,33 @@ $term = get_queried_object();
 $term_id = $term->term_id;
 $term_name = $term->name;
 
-// Foto do artista
-$thumbnail_id = get_term_meta( $term_id, 'thumbnail_id', true );
+// Foto do artista: prioriza o registro do plugin (tabela wp_centralmidi_artistas)
+// e só depois o thumbnail_id do termo — antes a foto do plugin era ignorada.
+$thumbnail_id = (int) get_term_meta( $term_id, 'thumbnail_id', true );
+$artist_row   = ( class_exists( 'CentralMidi_DB' ) ? CentralMidi_DB::get_artista_by_nome( $term_name ) : null );
+$is_artist    = ! empty( $artist_row );
+if ( ! $thumbnail_id && $is_artist && ! empty( $artist_row->foto_id ) ) {
+    $thumbnail_id = (int) $artist_row->foto_id;
+}
 $image_url = $thumbnail_id ? wp_get_attachment_image_url( $thumbnail_id, 'medium' ) : '';
+
+// Iniciais para o avatar quando o artista não tem foto cadastrada.
+$cm_initials = '';
+foreach ( preg_split( '/\s+/', trim( $term_name ) ) as $cm_word ) {
+    if ( '' !== $cm_word ) {
+        $cm_initials .= mb_substr( $cm_word, 0, 1 );
+    }
+}
+$cm_initials = mb_substr( $cm_initials, 0, 2 );
 
 $artist_description = term_description( $term_id, 'product_cat' );
 $paged = max(1, get_query_var('paged'));
 ?>
 
 <div class="artista-detalhe-page cm-archive-page">
-    <div class="cm-search-hero cm-archive-hero">
+    <div class="cm-search-hero cm-archive-hero cm-artist-hero">
         <div class="shop-container">
+            <div class="cm-artist-hero-inner">
             <nav class="cm-search-breadcrumb" aria-label="Navegação">
                 <a href="<?php echo esc_url(home_url('/')); ?>"><i class="ri-home-4-line"></i> Início</a>
                 <span class="cm-breadcrumb-sep"><i class="ri-arrow-right-s-line"></i></span>
@@ -39,24 +55,43 @@ $paged = max(1, get_query_var('paged'));
                 <span class="cm-breadcrumb-current"><?php echo esc_html($term_name); ?></span>
             </nav>
 
-            <?php if ($image_url) : ?>
-                <div class="cm-artist-hero-thumb">
-                    <img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr($term_name); ?>">
+            <div class="cm-artist-profile">
+                <div class="cm-artist-profile-media">
+                    <?php if ($image_url) : ?>
+                        <img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr($term_name); ?>">
+                    <?php elseif ($is_artist) : ?>
+                        <span><?php echo esc_html($cm_initials); ?></span>
+                    <?php else : ?>
+                        <i class="ri-folder-music-line"></i>
+                    <?php endif; ?>
                 </div>
-            <?php endif; ?>
 
-            <span class="cm-search-badge"><i class="ri-user-voice-line"></i> Artista / Banda</span>
-            <h1 class="cm-search-title">Midis de <strong><?php echo esc_html($term_name); ?></strong></h1>
-            <p class="cm-search-subtitle">
-                <?php if ($wp_query->found_posts > 0) : ?>
-                    Exibindo <strong><?php echo esc_html($wp_query->found_posts); ?></strong> arquivo(s) MIDI de <?php echo esc_html($term_name); ?>.
-                <?php else : ?>
-                    Nenhum MIDI encontrado para este artista.
-                <?php endif; ?>
-            </p>
-            <?php if ($artist_description) : ?>
-                <div class="cm-term-desc"><?php echo wp_kses_post(wpautop($artist_description)); ?></div>
-            <?php endif; ?>
+                <div class="cm-artist-profile-info">
+                    <span class="cm-search-badge">
+                        <i class="ri-<?php echo $is_artist ? 'user-voice-line' : 'folder-music-line'; ?>"></i>
+                        <?php echo $is_artist ? 'Artista / Banda' : 'Categoria'; ?>
+                    </span>
+                    <h1 class="cm-search-title"><?php echo esc_html($term_name); ?></h1>
+                    <p class="cm-search-subtitle">
+                        <?php if ($wp_query->found_posts > 0) : ?>
+                            <?php
+                            printf(
+                                /* translators: 1: quantidade de MIDIs, 2: nome do artista/categoria. */
+                                esc_html__( '%1$s MIDIs disponíveis de %2$s.', 'centralmidi' ),
+                                '<strong>' . esc_html( number_format_i18n( $wp_query->found_posts ) ) . '</strong>',
+                                esc_html( $term_name )
+                            );
+                            ?>
+                        <?php else : ?>
+                            Nenhum MIDI encontrado para este artista.
+                        <?php endif; ?>
+                    </p>
+                    <?php if ($artist_description) : ?>
+                        <div class="cm-term-desc"><?php echo wp_kses_post(wpautop($artist_description)); ?></div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            </div>
         </div>
     </div>
 

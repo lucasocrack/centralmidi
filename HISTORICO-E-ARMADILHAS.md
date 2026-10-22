@@ -577,3 +577,79 @@ maior risco aberto depois da migração.
     com o remote). O GitHub reporta 198 vulnerabilidades de dependências no
     default branch — são de commits passados (tree atual só tem 2 vendored do Tabulator); revisar
     se quiser zerar o alerta.
+
+---
+
+# 3. Polish do tema child (2026-10-21)
+
+Lote de ajustes visuais e de espaçamento no `flatsome-child`, todos verificados
+por pixel (Playwright + PIL) nos dois temas, em 390/600/768/900/1024/1280/1440 px.
+
+## 3.1 Tema claro mais "cinza" (e não branco)
+
+Tokens novos no `style.css` (commit `5c314c9` + ajustes):
+
+| Token | Claro | Escuro |
+|---|---|---|
+| `--cm-bg-body` | `#eef1f5` | `#080c13` |
+| `--cm-bg-surface` | `#f7f9fb` | `#0b1120` |
+| `--cm-bg-card` | `#ffffff` | `#111827` |
+
+O tema pai deixa `#main, #wrapper { background-color: #fff }` no `flatsome.css`:
+neutralizado no child com `html #main, html #wrapper { background-color:
+var(--cm-bg-body) !important; }`.
+
+**O header fica escuro nos dois temas** (`.cm-top-bar` `#080c13` e `.cm-main-header`
+`#0b1120`, com `!important` no bloco `[data-theme="light"]`). Isso é de propósito:
+é a faixa de marca do site. Consequência prática: **no tema claro a transição
+header → conteúdo é sempre escuro → claro**, então qualquer tarja intermediária
+(mesma cor do conteúdo, mas com o header escuro em cima) lê como "erro".
+
+## 3.2 A "faixa de cor errada" entre o header e o conteúdo
+
+**Causa raiz (medida com `git stash` comparando HEAD × working tree):** a regra
+
+```css
+body:not(.home):not(.woocommerce-cart):not(.woocommerce-checkout) #main { padding-top: 28px !important; }
+```
+
+criava uma faixa de 28 px (18 px no mobile) na cor do `--cm-bg-body` entre o
+header e o conteúdo de **todas** as páginas internas. No `/servicos/` era pior: a
+faixa cinza aparecia entre o header e a foto escura do hero.
+
+**Correção:** o `#main` ficou sem `padding-top` global e o respiro foi para
+**dentro** do bloco de conteúdo, que assim herda a própria cor (a lista de
+artistas continua `#f7f9fb`, o conteúdo `#eef1f5`) — o topo encosta no header
+sem tarja. Regra que faz isso (em `style.css`):
+
+```css
+body:not(.home):not(.woocommerce-cart):not(.woocommerce-checkout):not(.woocommerce-account) #main > .cmidi-artistas-page-wrapper,
+body:not(.home):not(.woocommerce-cart):not(.woocommerce-checkout):not(.woocommerce-account) #main > #content { padding-top: 28px !important; }
+@media (max-width: 600px) { ... padding-top: 18px !important; }
+
+/* hero full-bleed (/servicos/): encosta no header */
+body:not(.home) #main > #content:has(> .section:first-child .page-title) { padding-top: 0 !important; }
+```
+
+**Armadilha:** o `:has()` só funciona em navegador moderno — o fallback é o
+padding de 28 px, que é o que o CSS faz de qualquer forma.
+
+**Armadilha de medição:** a regra antiga era `!important` no `#main`; ao
+"corrigir" aumenta-se o espaçamento e o usuário vê a tarja como se fosse um
+erro novo. Antes de mexer, compare HEAD × working tree com `git stash` e meça
+por pixel — foi assim que a origem ficou provada.
+
+## 3.3 Hero de perfil do artista (`taxonomy-product_cat.php`)
+
+O hero da página de artista (ex.: `/artistas/m/mariana-fagundes/`) foi refeito
+no layout do hero de busca: foto (ou iniciais, ou ícone) de 112 px à esquerda,
+`h1` = nome do artista, badge "Artista / Banda", contagem de MIDIs e descrição
+do termo, alinhados à esquerda, empilhando no mobile. O avatar usa a foto do
+plugin (`CentralMidi_DB::get_artista_by_nome()` → `foto_id`) e só cai para o
+`thumbnail_id` do termo quando não há foto no plugin — antes essa ordem estava
+invertida e a foto do plugin era ignorada.
+
+O padding dos heroes (`.cm-search-hero`, `.cm-archive-hero`) caiu de 155 px para
+44 px (32 px ≤ 959 px, 24 px ≤ 549 px) e as cores foram tokenizadas em
+`assets/css/custom-style.css`.
+
