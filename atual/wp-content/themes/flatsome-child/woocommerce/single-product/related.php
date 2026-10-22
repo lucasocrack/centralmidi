@@ -1,45 +1,57 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+/**
+ * Related Products Template - Central MIDI
+ *
+ * Utiliza o grid moderno e o componente card-midi.php nativo do Central MIDI
+ *
+ * @package CentralMidi_Child
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
 }
 
-$type = get_theme_mod( 'related_products', 'slider' );
-if ( $type == 'hidden' ) return;
+if (!empty($related_products)) :
+    $heading = apply_filters('woocommerce_product_related_products_heading', __('Músicas Relacionadas', 'centralmidi'));
 
-if ( $related_products ) :
+    $cm_rel_ids = array();
+    foreach ($related_products as $rel_prod) {
+        $cm_rel_ids[] = (int) $rel_prod->get_id();
+    }
 
-	if ( function_exists( 'wp_increase_content_media_count' ) ) {
-		$content_media_count = wp_increase_content_media_count( 0 );
-		if ( $content_media_count < wp_omit_loading_attr_threshold() ) {
-			wp_increase_content_media_count( wp_omit_loading_attr_threshold() - $content_media_count );
-		}
-	}
-	?>
+    $cm_rel_map = ($cm_rel_ids && class_exists('CentralMidi_DB'))
+        ? CentralMidi_DB::get_midis_by_products($cm_rel_ids)
+        : array();
 
-	<div class="related related-products-wrapper product-section">
+    if (function_exists('cmidi_prime_cards')) {
+        cmidi_prime_cards($cm_rel_ids);
+    }
+?>
 
-		<?php
-		$heading = apply_filters( 'woocommerce_product_related_products_heading', __( 'Related products', 'woocommerce' ) );
-		if ( $heading ) :
-			?>
-			<h3 class="product-section-title container-width product-section-title-related pt-half pb-half uppercase">
-				<?php echo esc_html( $heading ); ?>
-			</h3>
-		<?php endif; ?>
+    <div class="cm-related-section">
+        <?php if ($heading) : ?>
+            <div class="cm-related-header">
+                <h3 class="cm-related-title">
+                    <i class="ri-music-2-line"></i> <?php echo esc_html($heading); ?>
+                </h3>
+                <span class="cm-related-sub">Arquivos MIDI sugeridos para você</span>
+            </div>
+        <?php endif; ?>
 
-		<div class="related-products-list">
-			<?php wc_set_loop_prop( 'columns', 1 ); ?>
-			<?php woocommerce_product_loop_start(); ?>
-			<?php foreach ( $related_products as $related_product ) :
-				$post_object = get_post( $related_product->get_id() );
-				setup_postdata( $GLOBALS['post'] = $post_object );
-				wc_get_template_part( 'content', 'product' );
-			endforeach; ?>
-			<?php woocommerce_product_loop_end(); ?>
-		</div>
+        <div class="cm-tracks-grid">
+            <?php foreach ($related_products as $related_product) : ?>
+                <?php
+                $rel_id = $related_product->get_id();
+                get_template_part('template-parts/card-midi', null, array(
+                    'product_id' => $rel_id,
+                    'midi'       => isset($cm_rel_map[$rel_id]) ? $cm_rel_map[$rel_id] : null,
+                ));
+                ?>
+            <?php endforeach; ?>
+        </div>
+    </div>
 
-	</div>
-	<?php
+<?php
 endif;
 
 wp_reset_postdata();

@@ -95,14 +95,15 @@ então ligar os hooks.
 
 ## 2. Arquitetura e Roteiro de Desacoplamento do Tema Pai (Flatsome)
 
-**Estado atual:** ~85% do sistema é 100% autônomo/proprietário e ~15% ainda depende
+**Estado atual:** ~90% do sistema é 100% autônomo/proprietário e ~10% ainda depende
 de componentes estruturais do tema pai Flatsome.
 
 ### Inventário de Dependência
 
-1. **Camada Autônoma / Proprietária (~85% - Independente do Flatsome):**
+1. **Camada Autônoma / Proprietária (~90% - Independente do Flatsome):**
    - **Player de Áudio & Playlist Drawer:** 100% desacoplado em `assets/css/player.css`, `assets/js/custom-script.js` e `howler.min.js`.
    - **Grid & Card de Produto (MIDI):** totalmente customizado em `card-midi.php` e `style.css` (layout Dark Moderno, preview demo, capa em grid side-by-side, badges e botões de ação), com sobrescritas próprias do WooCommerce: `woocommerce/archive-product.php`, `woocommerce/content-product.php`, `woocommerce/loop/*` e `woocommerce/single-product/related.php`.
+   - **Página de Produto Único (`single-product.php`):** 100% desacoplada e autônoma em `woocommerce/single-product.php` (sem shortcodes UX Builder, com player demo integrado, badges, cards de compra e relacionados em `card-midi.php`).
    - **Camada de Dados & Queries:** classe `CentralMidi_DB` com queries SQL nativas e otimizadas sem hooks do Flatsome.
    - **Listagens e Arquivos:** `search.php` e taxonomias (`taxonomy-product_cat.php`, `taxonomy-genero_musical.php`, `taxonomy-mes_de_lancamento.php`) com grid próprio, banners dark dinâmicos e controle de fila de reprodução.
    - **Catálogo A-Z e Navegação de Artistas:** 100% no plugin (`class-centralmidi-artistas.php`), com navegação A-Z em AJAX instantâneo, busca em tempo real, SSR e aviso #RLM.
@@ -112,8 +113,7 @@ de componentes estruturais do tema pai Flatsome.
    - **Home (conteúdo):** as 4 seções abaixo de `get_featured` (Bem-vindos, Sobre os serviços, Nossa equipe, Leis de Copyright) são estáticas `cm-home-*` e tokenizadas.
    - **Carrinho e Checkout:** templates `cart/cart.php`, `checkout/thankyou.php`, `checkout/layouts/checkout-focused.php` e `order/order-details-item.php` totalmente estilizados com tokens nos temas claro e escuro.
 
-2. **Camada Dependente do Flatsome (~15% - Amarrada ao Tema Pai):**
-   - **Página Individual do Produto:** sem `single-product.php` próprio — o layout principal vem do pai (`woocommerce/single-product.php` + `single-product/layouts/*`); o child só injeta hooks (`woocommerce_single_product_summary` 15 e 18) e sobrescreve `related.php`.
+2. **Camada Dependente do Flatsome (~10% - Amarrada ao Tema Pai):**
    - **Minha Conta:** `woocommerce/myaccount/*` (navegação, dashboard, login) ainda do pai — o child não sobrescreve.
    - **Página da Home (wrapper + hero):** `page-blank.php` próprio sem hooks do pai, mas o `post_content` (page 14) guarda shortcodes do UX Builder (`[ux_slider]` com 9 `[ux_banner]` e o wrapper `[section][get_featured]`) cujas classes de tema (`slider-wrapper`+flickity, parallax) saem do `flatsome.css`.
    - **CSS/JS Base:** `flatsome.css` (~400KB) e scripts do UX Builder + resets herdados.
@@ -122,10 +122,9 @@ de componentes estruturais do tema pai Flatsome.
 
 ### Roteiro para Desacoplamento 100%
 
-1. **Página de Produto Único (`single-product.php`):** criar template `woocommerce/single-product.php` próprio com visual Dark Moderno, player em destaque, lista de faixas/amostra e recomendações integradas.
-2. **Substituição do Slider UX Builder na Home:** trocar o shortcode `[ux_slider]` com 9 banners do UX Builder por slider nativo/moderno no child, eliminando a dependência do Flickity do Flatsome.
-3. **Páginas de Minha Conta (`myaccount`):** sobrescrever templates do WooCommerce para navegação e dashboard da conta em tema escuro/claro nativo.
-4. **Autonomia Completa de Tema:** renomear o tema para `centralmidi` no `style.css` (removendo `Template: flatsome`), tornando o projeto 100% independente do tema pai. Aproveitar para: limpar os `remove_action('flatsome_after_header', 'flatsome_category_header')` que viraram no-op (`search.php`, `taxonomy-*.php` e `class-centralmidi-artistas.php:93`), as regras `.has-transparent` do `style.css` e a classe `loading-site` fixa no `<html>` do `header.php`.
+1. **Substituição do Slider UX Builder na Home:** trocar o shortcode `[ux_slider]` com 9 banners do UX Builder por slider nativo/moderno no child, eliminando a dependência do Flickity do Flatsome.
+2. **Páginas de Minha Conta (`myaccount`):** sobrescrever templates do WooCommerce para navegação e dashboard da conta em tema escuro/claro nativo.
+3. **Autonomia Completa de Tema:** renomear o tema para `centralmidi` no `style.css` (removendo `Template: flatsome`), tornando o projeto 100% independente do tema pai. Aproveitar para: limpar os `remove_action('flatsome_after_header', 'flatsome_category_header')` que viraram no-op (`search.php`, `taxonomy-*.php` e `class-centralmidi-artistas.php:93`), as regras `.has-transparent` do `style.css` e a classe `loading-site` fixa no `<html>` do `header.php`.
 
 ## Como usar este arquivo
 
