@@ -127,10 +127,11 @@ de componentes estruturais do tema pai Flatsome.
 
 ## Como usar este arquivo
 
-- Item corrigido → apague o bloco, não marque como "feito". **Este diretório não é
-  repo git**, então o histórico vai para `HISTORICO-E-ARMADILHAS.md` (§1.x) e o
-  dump correspondente em `backup/`. O runbook da migração foi removido em
-  2026-09-28; o backup dele está em `atual/.local-excluidos/docs-2026-09-28/`.
+- Item corrigido → apague o bloco, não marque como "feito". O histórico vai para
+  `HISTORICO-E-ARMADILHAS.md` (§1.x) e o dump correspondente em `backup/`. O
+  runbook da migração foi removido em 2026-09-28; o backup dele está em
+  `atual/.local-excluidos/docs-2026-09-28/`, e os relatórios da migração ficam
+  em `relatorios/` (fora do git).
 - Item que virou irrelevante → apague também, e diga por quê em `HISTORICO-E-ARMADILHAS.md`.
 - Achado novo → adicione no fim, com número de seção e medição.
 - Ao mexer em `product_cat`, meça antes e depois. Os números deste arquivo

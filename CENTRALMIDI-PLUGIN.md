@@ -137,12 +137,14 @@ Registrado via `add_shortcode` em `class-centralmidi-catalog.php`, com filtros
 por artista, gênero, mês e classificação (GET), paginação
 (`por_pagina`, padrão 12) e cards com `template-parts/card-midi.php`.
 
-**Está registrado mas não é usado em nenhuma página publicada.** Verificado no
-banco: nenhuma página contém o shortcode. E `CentralMidi_DB::catalog_page_id()`
-procura justamente uma página com o shortcode, então retorna `0` e
-`catalog_url()` cai no fallback `home_url('/midis/')`.
+**É código legado: está registrado mas não é usado em nenhuma página publicada.**
+Desde 2026-10-21 o catálogo de `/midis/` é renderizado pelo tema em
+`catalogo-midis.php` (ver HISTORICO §2.1), não por este shortcode.
+`CentralMidi_DB::catalog_page_id()` procura uma página que contenha o shortcode,
+então continua retornando `0` — e `catalog_url()` cai no fallback
+`home_url('/midis/')`, que hoje coincide com a URL real do catálogo.
 
-Consequência prática: nada renderiza. `enqueue_assets()` apenas faz
+O shortcode não renderiza nada. `enqueue_assets()` apenas faz
 `wp_register_style('centralmidi-catalog')`; o `wp_enqueue_style()` de verdade
 está dentro do callback do shortcode (`render()`). Como o shortcode nunca roda,
 o `catalog.css` **não chega a ser carregado** — fica registrado e órfão.
@@ -190,12 +192,13 @@ por uma página do site. A importação cria MIDIs com `publicado=0` por padrão
 
 | Arquivo | Linhas | Papel |
 |---|---:|---|
-| `centralmidi.php` | 66 | Bootstrap, constantes, activate/uninstall |
-| `includes/class-centralmidi-db.php` | 1.438 | Schema, upsert, consultas, referências, cache |
+| `centralmidi.php` | 68 | Bootstrap, constantes, activate/uninstall |
+| `includes/class-centralmidi-db.php` | 1.714 | Schema, upsert, consultas, referências, cache |
 | `includes/class-centralmidi-admin.php` | 1.226 | Menu, metabox, tela MIDIs, AJAX, importador |
 | `includes/class-centralmidi-migration.php` | 809 | Rotina de migração **desregistrada** |
 | `includes/class-centralmidi-frontend.php` | 242 | Helpers estáticos **órfãos** |
 | `includes/class-centralmidi-catalog.php` | 148 | Shortcode, filtros, `render_card()` |
+| `includes/class-centralmidi-artistas.php` | 391 | Catálogo A-Z, rewrites de `/artistas/` |
 
 ### `CentralMidi_Migration` — desregistrada de propósito
 
@@ -207,8 +210,8 @@ zero chaves legadas, apagaria `_centralmidi_*` em massa, e o handler de reset
 droparia as tabelas novas. Os métodos continuam no arquivo caso o catálogo
 precise ser reconstruído.
 
-Não_registered = a classe é instanciada em `centralmidi_init()`, mas não faz
-nada. Não mexa aqui achando que o fluxo está ativo.
+A classe é instanciada em `centralmidi_init()`, mas não registra nada. Não mexa
+aqui achando que o fluxo está ativo.
 
 ### `CentralMidi_Frontend` — órfã
 
@@ -228,7 +231,8 @@ wp-content/plugins/centralmidi/
 │   ├── class-centralmidi-admin.php       # Menu, metabox, tela MIDIs, AJAX, importador
 │   ├── class-centralmidi-migration.php   # Migração legada (DESREGISTRADA)
 │   ├── class-centralmidi-frontend.php    # Helpers estáticos (ÓRFÃ)
-│   └── class-centralmidi-catalog.php     # Shortcode, filtros, cards
+│   ├── class-centralmidi-catalog.php     # Shortcode, filtros, cards
+│   └── class-centralmidi-artistas.php    # Catálogo A-Z de /artistas/
 └── assets/
     ├── css/catalog.css                   # Catálogo público
     ├── css/admin-midis.css               # Ajustes do Tabulator
@@ -254,20 +258,22 @@ Funções do tema que escrevem na tabela: `cmidi_sync_tabela_classificacao()`,
 
 ## URLs
 
-O catálogo **não** está em `/midis/`.
+Catálogo de MIDIs e catálogo A-Z de artistas são URLs distintas desde
+2026-10-21 (HISTORICO §2.1).
 
 | URL | Realidade |
 |---|---|
-| `/` | Homepage — é aqui que a grade de produtos renderiza (72 `cm-track-card` na home local) |
-| `/midis/` | Página ID 9, **vazia** — sem shortcode, sem produtos |
+| `/` | Homepage — grade de destaques (`cm-track-card`) |
+| `/midis/` | Página ID 9 (shop page do WooCommerce) — catálogo completo de MIDIs, renderizado por `catalogo-midis.php` no tema |
+| `/artistas/`, `/artistas/<letra>/` | Catálogo A-Z de artistas (rewrite do plugin, `class-centralmidi-artistas.php`) |
 | `/midis-por-genero/` | Arquivo de `genero_musical` (25 termos) |
 | `/midis-por-mes-de-lancamento/` | Arquivo de `mes_de_lancamento` (13 termos) |
-| `product_cat` | Artistas — **13.662** termos |
+| `product_cat` | Artistas — **13.662** termos (URL base `/artistas/`) |
 | `/ferramentas-admin/` | Página ID 1219186 (admin do tema, fora do plugin) |
 
-`/loja/` e `/shop/` retornam **404** — não há página de shop WooCommerce criada.
-Existe `taxonomy-product_cat.php` no tema, então os artistas são servidos por
-`product_cat`.
+`/loja/` e `/shop/` retornam **404** — a shop page do WooCommerce é a própria
+`/midis/` (ID 9). Existe `taxonomy-product_cat.php` no tema, então os artistas
+são servidos por `product_cat`.
 
 ## Ambiente local
 
@@ -288,13 +294,19 @@ container — prefira SQL direto (`docker exec local_db mysql …`).
 
 ## Pendências conhecidas
 
-1. **`/midis/` está vazia** e o shortcode não está em página nenhuma. Se a
-   intenção era usar o shortcode, ele precisa ser inserido — hoje
-   `catalog_page_id()` retorna `0`.
-2. **`CentralMidi_Frontend` é código morto** (242 linhas).
-3. **`publicado=0` não bloqueia compra** — falta o filtro
+Itens técnicos do plugin. Para o estado geral do site e o roteiro de
+desacoplamento, a fonte é `PENDENCIAS.md`.
+
+1. **`CentralMidi_Frontend` é código morto** — o arquivo é incluído em
+   `centralmidi.php:22`, mas a classe nunca é instanciada; só um comentário em
+   `class-centralmidi-db.php` a menciona.
+2. **`publicado=0` não bloqueia compra** — falta o filtro
    `woocommerce_is_purchasable`.
-4. **47.047 MIDIs sem classificação** (56% do catálogo).
-5. **`/loja/` e `/shop/` dão 404** — não há página de shop.
-6. **Assets da migração** (`admin-migration.css`, `migration.js`) são carregados
-   por código de tela que não registra mais nada.
+3. **47.047 MIDIs sem classificação** (56% do catálogo) — legado sem `rlm`;
+   é o complemento esperado, não erro (HISTORICO §1.5).
+4. **Assets da migração órfãos** — `admin-migration.css` e `migration.js` só
+   seriam enfileirados por `CentralMidi_Migration::enqueue()`, que não está
+   ligado a nenhum hook.
+5. **Shortcode legado `[centralmidi_catalogo]`** — registrado e sem uso desde
+   que `/midis/` passou a usar `catalogo-midis.php`; decidir se remove ou
+   apenas documenta como obsoleto.

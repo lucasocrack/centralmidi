@@ -1643,11 +1643,28 @@ function cm_admin_audit_demos_ajax() {
         wp_send_json_error('Classe CentralMidi_DB não encontrada');
     }
 
-    $audit = CentralMidi_DB::audit_demos();
-    // Guarda em transient por 30 minutos para permitir correções sem re-scanear imediatamente
-    set_transient('cm_last_demo_audit', $audit, 1800);
+    // Aumenta limites para evitar timeout em servidores de produção
+    if (function_exists('set_time_limit')) {
+        @set_time_limit(300);
+    }
+    if (function_exists('wp_raise_memory_limit')) {
+        wp_raise_memory_limit('admin');
+    } else {
+        @ini_set('memory_limit', '512M');
+    }
 
-    wp_send_json_success($audit);
+    try {
+        // Garante schema atualizado
+        CentralMidi_DB::maybe_upgrade();
+
+        $audit = CentralMidi_DB::audit_demos();
+        // Guarda em transient por 30 minutos para permitir correções sem re-scanear imediatamente
+        set_transient('cm_last_demo_audit', $audit, 1800);
+
+        wp_send_json_success($audit);
+    } catch (\Throwable $e) {
+        wp_send_json_error('Erro na auditoria: ' . $e->getMessage());
+    }
 }
 
 add_action('wp_ajax_cm_admin_apply_demo_fixes', 'cm_admin_apply_demo_fixes_ajax');

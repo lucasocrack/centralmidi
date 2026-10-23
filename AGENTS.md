@@ -13,9 +13,9 @@ workspace de staging local (espelho de produção).
 | `atual/wp-content/themes/flatsome-child/` | Tema child (depende do parent `flatsome/`, que **não** é versionado aqui). Fonte única rastreada |
 | `HISTORICO-E-ARMADILHAS.md` | Memória do projeto (o que foi feito e por quê, armadilhas) |
 | `PENDENCIAS.md` | Itens deliberadamente não corrigidos + roteiro de desacoplamento do tema |
-| `conflitos-migracao-producao.md`, `produtos-para-revisar-pos-migracao.md` | Relatórios da migração 2026-09-27 |
+| `CENTRALMIDI-PLUGIN.md` | Referência técnica do plugin (tabelas, classes, endpoints, URLs) |
 | `atual/` | **Espelho de produção + WP instalado** (docker). Ignorado no git **exceto** o plugin e o tema acima — todo o resto (WP core, SQL, creds docker, `demos/` com 71 GB RO) fica fora por regra seletiva do `.gitignore` |
-| `backup/`, `baseline/`, `relatorios/` | Dumps SQL e medições. Ignorados no git |
+| `backup/`, `baseline/`, `relatorios/` | Dumps SQL, medições e relatórios históricos (ex.: migração 2026-09-27). Ignorados no git |
 | `atual/.local-excluidos/` | Coisas removidas do projeto (docs antigos, backups de arquivos) — não apagar |
 
 **Regra de ouro:** o repo contém **só código e documentação** — nunca credenciais,

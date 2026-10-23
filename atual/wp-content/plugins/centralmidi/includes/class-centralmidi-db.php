@@ -172,6 +172,15 @@ class CentralMidi_DB {
             );
         }
 
+        // Ensure the midis table has demo_status and demo_verified_at for physical audit.
+        if (!self::column_exists($midis_table, 'demo_status')) {
+            $wpdb->query("ALTER TABLE {$midis_table} ADD COLUMN demo_status VARCHAR(15) NOT NULL DEFAULT 'unverified' AFTER demo_audio");
+            $wpdb->query("ALTER TABLE {$midis_table} ADD KEY demo_status (demo_status)");
+        }
+        if (!self::column_exists($midis_table, 'demo_verified_at')) {
+            $wpdb->query("ALTER TABLE {$midis_table} ADD COLUMN demo_verified_at DATETIME NULL AFTER demo_status");
+        }
+
         // Backfill the year for legacy rows created before the column existed.
         $wpdb->query("UPDATE {$midis_table} SET ano_lancamento = YEAR(created_at) WHERE ano_lancamento = 0 AND created_at IS NOT NULL");
 
@@ -1613,8 +1622,13 @@ class CentralMidi_DB {
 
         // 3. Persistência de status no banco em lotes eficientes (se solicitado)
         if ($persist_status) {
-            $now = current_time('mysql');
+            // Garante que as colunas existam antes de executar update
             $table = self::table_name();
+            if (!self::column_exists($table, 'demo_status') || !self::column_exists($table, 'demo_verified_at')) {
+                self::maybe_upgrade();
+            }
+
+            $now = current_time('mysql');
 
             // Grava 'ok' para os exatos
             if (!empty($ok_ids)) {

@@ -13,6 +13,11 @@ Ficaram aqui as duas coisas que **não** se reconstroem sozinhas:
 
 Backup do runbook completo: `.local-excluidos/docs-2026-09-28/MIGRACAO-BANCO-PRODUCAO.md`.
 
+Os dois relatórios da migração (`conflitos-migracao-producao.md` e
+`produtos-para-revisar-pos-migracao.md`) saíram do repo em 2026-10-22 e ficam em
+`relatorios/` (fora do git). As conclusões que importam estão resumidas neste
+arquivo (§1.5 e §1.1/§1.2) e em `PENDENCIAS.md`.
+
 Números de referência da migração: **81.852** MIDIs, **13.625** artistas,
 **25** gêneros, **13.662** termos em `product_cat`.
 
