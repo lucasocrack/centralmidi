@@ -299,7 +299,10 @@ $nonce = wp_create_nonce('pa_admin_nonce');
               <h4 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 700; color: #7c3aed;">📁 Arquivos Órfãos na Pasta <code>/demos/</code> ({{ demoAudit.orphans.length }} arquivos)</h4>
               <p style="margin: 0; color: #6b7280; font-size: 13px;">Estes arquivos MP3 existem fisicamente no servidor mas nenhum produto aponta para eles. Você pode ouvi-los e criar o produto MIDI correspondente com 1 clique.</p>
             </div>
-            <button type="button" @click="exportOrphansCSV" class="button">📥 Exportar Lista de Órfãos (CSV)</button>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <input type="text" v-model="orphansSearch" placeholder="🔍 Filtrar arquivo, música ou artista..." class="prod-input" style="width: 250px; font-size: 12px; height: 28px;" @input="orphansPage = 1">
+              <button type="button" @click="exportOrphansCSV" class="button">📥 Exportar Órfãos (CSV)</button>
+            </div>
           </div>
 
           <div class="audit-table-scroll">
@@ -319,7 +322,7 @@ $nonce = wp_create_nonce('pa_admin_nonce');
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(o, idx) in demoAudit.orphans.slice(0, 100)" :key="o.path">
+                <tr v-for="o in paginatedOrphans" :key="o.path">
                   <td>
                     <button type="button" @click="togglePlayPath(o.url)" class="btn-play" :class="{ playing: currentPlayingPath === o.url }">
                       {{ currentPlayingPath === o.url ? '⏸' : '▶' }}
@@ -365,16 +368,31 @@ $nonce = wp_create_nonce('pa_admin_nonce');
                     </label>
                   </td>
                   <td>
-                    <button type="button" class="button primary button-sm" @click="createProductFromOrphan(o, idx)" :disabled="o.isCreating">
+                    <button type="button" class="button primary button-sm" @click="createProductFromOrphan(o)" :disabled="o.isCreating">
                       {{ o.isCreating ? '⏳ Criando...' : '➕ Criar' }}
                     </button>
                   </td>
                 </tr>
               </tbody>
             </table>
-            <p v-if="demoAudit.orphans.length > 100" class="table-more-hint">
-              Mostrando os primeiros 100 arquivos órfãos de {{ demoAudit.orphans.length }}.
-            </p>
+          </div>
+
+          <!-- Paginação de Órfãos -->
+          <div class="prod-pagination" style="margin-top: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: space-between;">
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <button @click="orphansPage = 1" class="button button-sm" :disabled="orphansPage <= 1">««</button>
+              <button @click="orphansPage--" class="button button-sm" :disabled="orphansPage <= 1">« Anterior</button>
+              <span style="font-size: 12px; color: #4b5563; font-weight: 500;">Página {{ orphansPage }} de {{ totalOrphansPages }} ({{ filteredOrphans.length }} arquivos)</span>
+              <button @click="orphansPage++" class="button button-sm" :disabled="orphansPage >= totalOrphansPages">Próxima »</button>
+              <button @click="orphansPage = totalOrphansPages" class="button button-sm" :disabled="orphansPage >= totalOrphansPages">»»</button>
+            </div>
+            <div>
+              <label style="font-size: 12px; color: #4b5563;">Por página:
+                <select v-model="orphansLimit" @change="orphansPage = 1" class="prod-select" style="width: 70px; height: 26px;">
+                  <option v-for="n in [25, 50, 100, 200]" :key="n" :value="n">{{ n }}</option>
+                </select>
+              </label>
+            </div>
           </div>
         </div>
 
@@ -392,25 +410,28 @@ $nonce = wp_create_nonce('pa_admin_nonce');
             <table class="results-table">
               <thead>
                 <tr>
-                  <th style="width: 60px;">ID</th>
+                  <th style="width: 50px;">ID</th>
                   <th style="width: 70px;">Prod ID</th>
-                  <th>Título do Produto</th>
-                  <th>Caminho Registrado</th>
+                  <th>Produto & Caminho Registrado</th>
                   <th style="width: 140px;">Motivo</th>
                   <th style="width: 160px; text-align: center;">Ações</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(m, idx) in demoAudit.missing.slice(0, 50)" :key="m.id">
+                <tr v-for="(m, idx) in demoAudit.missing" :key="m.id">
                   <td>{{ m.id }}</td>
                   <td>
                     <a :href="getEditPostUrl(m.product_id)" target="_blank" title="Abrir produto no WordPress" style="color: #2563eb; font-weight: 600; text-decoration: underline;">
                       {{ m.product_id }} ↗
                     </a>
                   </td>
-                  <td><strong>{{ m.title }}</strong></td>
-                  <td>
-                    <code style="word-break: break-all; font-size: 11px;">{{ m.demo_audio }}</code>
+                  <td style="white-space: normal; max-width: 500px; padding: 6px 8px;">
+                    <div style="font-weight: 700; color: #111827; margin-bottom: 3px; font-size: 13px; line-height: 1.3;">
+                      {{ m.title }}
+                    </div>
+                    <div style="font-size: 11px; color: #dc2626; word-break: break-all; line-height: 1.3;">
+                      📁 <code style="color: #b91c1c; background: #fee2e2; padding: 1px 4px; border-radius: 3px; font-size: 10.5px;">{{ m.demo_audio }}</code>
+                    </div>
                   </td>
                   <td><span class="badge-pill danger">{{ m.reason }}</span></td>
                   <td style="text-align: center;">
@@ -595,7 +616,7 @@ label { color: #4b5563; font-weight: 500; font-size: 14px; display: inline-flex;
 
 .audit-section-box { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 18px 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
 .section-box-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
-.audit-table-scroll { max-height: 400px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 6px; }
+.audit-table-scroll { max-height: 680px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 6px; }
 .code-danger { color: #dc2626; background: #fee2e2; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
 .code-success { color: #059669; background: #d1fae5; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
 .badge-pill { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; }
@@ -620,6 +641,9 @@ new Vue({
     isApplyingFixes: false,
     currentPlayingPath: null,
     audioPath: null,
+    orphansPage: 1,
+    orphansLimit: 50,
+    orphansSearch: '',
     stats: { total: 0, withDemo: 0 },
     products: [],
     toast: { show: false, message: '', type: 'success' },
@@ -705,6 +729,26 @@ new Vue({
 
       list.sort((a, b) => parseSort(b.label) - parseSort(a.label));
       return list;
+    },
+    filteredOrphans() {
+      if (!this.demoAudit || !this.demoAudit.orphans) return [];
+      const q = (this.orphansSearch || '').toLowerCase().trim();
+      if (!q) return this.demoAudit.orphans;
+      return this.demoAudit.orphans.filter(o => {
+        return (o.filename && o.filename.toLowerCase().includes(q)) ||
+               (o.path && o.path.toLowerCase().includes(q)) ||
+               (o.deduced_artist && o.deduced_artist.toLowerCase().includes(q)) ||
+               (o.deduced_title && o.deduced_title.toLowerCase().includes(q));
+      });
+    },
+    paginatedOrphans() {
+      const list = this.filteredOrphans;
+      const start = (this.orphansPage - 1) * this.orphansLimit;
+      return list.slice(start, start + this.orphansLimit);
+    },
+    totalOrphansPages() {
+      const len = this.filteredOrphans.length;
+      return Math.max(1, Math.ceil(len / this.orphansLimit));
     }
   },
   watch: {
@@ -1051,7 +1095,7 @@ new Vue({
               }
 
               o.publicado = true;
-              o.price = '15.00';
+              o.price = '20.00';
               o.isCreating = false;
             });
           }
@@ -1109,7 +1153,7 @@ new Vue({
         this.$set(item, 'isFixing', false);
       }
     },
-    async createProductFromOrphan(orphan, index) {
+    async createProductFromOrphan(orphan) {
       if (!orphan.deduced_title || !orphan.deduced_title.trim()) {
         alert('Por favor, informe o título da música.');
         return;
@@ -1123,7 +1167,7 @@ new Vue({
           genre_id: orphan.genre_id || 0,
           mes_id: orphan.mes_id || '',
           rlm: orphan.rlm || 'M',
-          price: orphan.price || '15.00',
+          price: orphan.price || '20.00',
           publicado: orphan.publicado ? 1 : 0
         });
         if (res && res.success) {
@@ -1132,11 +1176,19 @@ new Vue({
           if (orphan.mes_id && typeof orphan.mes_id === 'string' && orphan.mes_id.includes(':')) {
             this.loadTaxonomy('mes_de_lancamento');
           }
-          // Remove da lista de órfãos
-          this.demoAudit.orphans.splice(index, 1);
+          // Remove da lista de órfãos procurando pelo caminho
+          const realIdx = this.demoAudit.orphans.findIndex(item => item.path === orphan.path);
+          if (realIdx !== -1) {
+            this.demoAudit.orphans.splice(realIdx, 1);
+          }
           this.demoAudit.summary.orphans_count--;
           this.demoAudit.summary.matched_exact++;
           this.demoAudit.summary.total_midis++;
+
+          // Ajusta a página caso a última tenha esvaziado
+          if (this.orphansPage > this.totalOrphansPages) {
+            this.orphansPage = Math.max(1, this.totalOrphansPages);
+          }
         } else {
           this.showToast(res.data || 'Erro ao criar produto', 'error');
         }

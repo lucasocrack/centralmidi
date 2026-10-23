@@ -1755,7 +1755,7 @@ function cm_admin_create_product_from_orphan_ajax() {
     $genre_id   = isset($_POST['genre_id']) ? (int)$_POST['genre_id'] : 0;
     $mes_val    = isset($_POST['mes_id']) ? sanitize_text_field($_POST['mes_id']) : '';
     $rlm        = isset($_POST['rlm']) ? cmidi_sanitize_classificacao($_POST['rlm']) : 'M';
-    $price      = isset($_POST['price']) ? sanitize_text_field($_POST['price']) : '15.00';
+    $price      = isset($_POST['price']) ? sanitize_text_field($_POST['price']) : '20.00';
     $publicado  = isset($_POST['publicado']) ? (int)$_POST['publicado'] : 1;
 
     if (empty($path) || empty($title) || empty($artist_id)) {
@@ -1786,7 +1786,7 @@ function cm_admin_create_product_from_orphan_ajax() {
     }
 
     // Configura produto simples com preço
-    $price = is_numeric($price) ? number_format((float)$price, 2, '.', '') : '15.00';
+    $price = is_numeric($price) ? number_format((float)$price, 2, '.', '') : '20.00';
     update_post_meta($product_id, '_price', $price);
     update_post_meta($product_id, '_regular_price', $price);
     update_post_meta($product_id, '_virtual', 'yes');
