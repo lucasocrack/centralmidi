@@ -921,6 +921,45 @@ function cmidi_sync_genero_meta($product_id, $term) {
     cmidi_sync_tabela_colunas($product_id, array('genero_id' => $ref_id));
 }
 
+/**
+ * Obtém ou cria dinamicamente o termo na taxonomia mes_de_lancamento (ex: 'OUT 2026', slug 'out-2026').
+ */
+function cmidi_obter_ou_criar_mes_term($mes, $ano) {
+    $mes = (int)$mes;
+    $ano = (int)$ano;
+    if ($mes < 1 || $mes > 12 || $ano < 2000) {
+        return null;
+    }
+
+    $siglas = array(
+        1 => 'JAN', 2 => 'FEV', 3 => 'MAR', 4 => 'ABR',
+        5 => 'MAI', 6 => 'JUN', 7 => 'JUL', 8 => 'AGO',
+        9 => 'SET', 10 => 'OUT', 11 => 'NOV', 12 => 'DEZ'
+    );
+    $slugs = array(
+        1 => 'jan', 2 => 'fev', 3 => 'mar', 4 => 'abr',
+        5 => 'mai', 6 => 'jun', 7 => 'jul', 8 => 'ago',
+        9 => 'set', 10 => 'out', 11 => 'nov', 12 => 'dez'
+    );
+
+    $name = $siglas[$mes] . ' ' . $ano;
+    $slug = $slugs[$mes] . '-' . $ano;
+
+    $term = get_term_by('slug', $slug, 'mes_de_lancamento');
+    if (!$term) {
+        $term = get_term_by('name', $name, 'mes_de_lancamento');
+    }
+
+    if (!$term) {
+        $created = wp_insert_term($name, 'mes_de_lancamento', array('slug' => $slug));
+        if (!is_wp_error($created) && isset($created['term_id'])) {
+            $term = get_term($created['term_id'], 'mes_de_lancamento');
+        }
+    }
+
+    return ($term && !is_wp_error($term)) ? $term : null;
+}
+
 function cmidi_sync_mes_meta($product_id, $term) {
     if (!$term || empty($term->name)) {
         cmidi_sync_tabela_colunas($product_id, array('mes_lancamento' => 0, 'ano_lancamento' => 0));
@@ -1714,9 +1753,10 @@ function cm_admin_create_product_from_orphan_ajax() {
     $title      = isset($_POST['title']) ? sanitize_text_field($_POST['title']) : '';
     $artist_id  = isset($_POST['artist_id']) ? (int)$_POST['artist_id'] : 0;
     $genre_id   = isset($_POST['genre_id']) ? (int)$_POST['genre_id'] : 0;
-    $mes_id     = isset($_POST['mes_id']) ? (int)$_POST['mes_id'] : 0;
+    $mes_val    = isset($_POST['mes_id']) ? sanitize_text_field($_POST['mes_id']) : '';
     $rlm        = isset($_POST['rlm']) ? cmidi_sanitize_classificacao($_POST['rlm']) : 'M';
     $price      = isset($_POST['price']) ? sanitize_text_field($_POST['price']) : '15.00';
+    $publicado  = isset($_POST['publicado']) ? (int)$_POST['publicado'] : 1;
 
     if (empty($path) || empty($title) || empty($artist_id)) {
         wp_send_json_error('Caminho do arquivo, título da música e Artista são obrigatórios.');
@@ -1732,11 +1772,12 @@ function cm_admin_create_product_from_orphan_ajax() {
     // Monta o título canônico Central MIDI: "ARTISTA/Música"
     $full_title = "{$artist_name}/{$title}";
 
-    // 1. Cria o Produto WooCommerce
+    // 1. Cria o Produto WooCommerce (status draft se não publicado, publish se publicado)
+    $post_status = ($publicado === 1) ? 'publish' : 'draft';
     $product_id = wp_insert_post(array(
         'post_title'   => $full_title,
         'post_type'    => 'product',
-        'post_status'  => 'publish',
+        'post_status'  => $post_status,
         'post_content' => '',
     ));
 
@@ -1753,27 +1794,53 @@ function cm_admin_create_product_from_orphan_ajax() {
 
     // 2. Vincula Taxonomias do WooCommerce
     wp_set_post_terms($product_id, array($artist_id), 'product_cat');
-    cmidi_sync_artista_meta($product_id, $artist_id);
+    cmidi_sync_artista_meta($product_id, $artist_term);
 
     if ($genre_id > 0) {
+        $genre_term = get_term($genre_id, 'genero_musical');
         wp_set_post_terms($product_id, array($genre_id), 'genero_musical');
-        cmidi_sync_genero_meta($product_id, $genre_id);
+        cmidi_sync_genero_meta($product_id, $genre_term);
     }
 
-    if ($mes_id > 0) {
-        wp_set_post_terms($product_id, array($mes_id), 'mes_de_lancamento');
-        cmidi_sync_mes_meta($product_id, $mes_id);
-    }
-
-    // 3. Extrai Mês e Ano numéricos (ou do termo ou do próprio caminho /demos/MMYYYY/)
+    // 3. Processamento de Mês e Ano
     $num_mes = 0;
     $num_ano = 0;
-    if (preg_match('#/demos/(\d{2})(\d{4})/#', $path, $m_path)) {
-        $num_mes = (int)$m_path[1];
-        $num_ano = (int)$m_path[2];
-    } else {
-        $num_mes = (int)date('n');
-        $num_ano = (int)date('Y');
+    $mes_term = null;
+
+    if (!empty($mes_val)) {
+        if (strpos($mes_val, ':') !== false) {
+            // Formato 'M:Y' gerado dinamicamente para meses futuros/gerais
+            list($m_part, $y_part) = explode(':', $mes_val, 2);
+            $num_mes = (int)$m_part;
+            $num_ano = (int)$y_part;
+            $mes_term = cmidi_obter_ou_criar_mes_term($num_mes, $num_ano);
+        } elseif (is_numeric($mes_val)) {
+            // ID de termo existente
+            $mes_id = (int)$mes_val;
+            $mes_term = get_term($mes_id, 'mes_de_lancamento');
+            if ($mes_term && !is_wp_error($mes_term)) {
+                list($num_mes, $num_ano) = cmidi_mes_ano_do_termo($mes_term);
+            }
+        }
+    }
+
+    // Fallback: se não informado mês, tenta deduzir do caminho físico (/demos/MMYYYY/)
+    if ($num_mes <= 0 || $num_ano <= 0) {
+        if (preg_match('#/demos/(\d{2})(\d{4})/#', $path, $m_path)) {
+            $num_mes = (int)$m_path[1];
+            $num_ano = (int)$m_path[2];
+            if (!$mes_term) {
+                $mes_term = cmidi_obter_ou_criar_mes_term($num_mes, $num_ano);
+            }
+        } else {
+            $num_mes = (int)date('n');
+            $num_ano = (int)date('Y');
+        }
+    }
+
+    if ($mes_term && !is_wp_error($mes_term)) {
+        wp_set_post_terms($product_id, array((int)$mes_term->term_id), 'mes_de_lancamento');
+        cmidi_sync_mes_meta($product_id, $mes_term);
     }
 
     // 4. Insere na tabela proprietária wp_centralmidi_midis
@@ -1811,7 +1878,7 @@ function cm_admin_create_product_from_orphan_ajax() {
             'mes_lancamento'   => $num_mes,
             'ano_lancamento'   => $num_ano,
             'classificacao'    => $rlm,
-            'publicado'        => 1,
+            'publicado'        => $publicado,
             'demo_audio'       => $path,
             'demo_status'      => 'ok',
             'demo_verified_at' => $now,
@@ -1824,7 +1891,91 @@ function cm_admin_create_product_from_orphan_ajax() {
     wp_send_json_success(array(
         'product_id' => $product_id,
         'edit_url'   => admin_url('post.php?post=' . $product_id . '&action=edit'),
-        'message'    => "Produto '{$full_title}' criado com sucesso! ID: {$product_id}",
+        'message'    => "Produto '{$full_title}' criado com sucesso! (" . ($publicado ? 'Publicado' : 'Rascunho') . ") ID: {$product_id}",
+    ));
+}
+
+add_action('wp_ajax_cm_admin_upload_missing_demo', 'cm_admin_upload_missing_demo_ajax');
+function cm_admin_upload_missing_demo_ajax() {
+    check_ajax_referer('pa_admin_nonce', '_wpnonce');
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Acesso não autorizado');
+    }
+
+    if (empty($_FILES['demo_file']) || !isset($_FILES['demo_file']['tmp_name'])) {
+        wp_send_json_error('Nenhum arquivo enviado.');
+    }
+
+    $file = $_FILES['demo_file'];
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        wp_send_json_error('Erro no upload do arquivo (código: ' . $file['error'] . ')');
+    }
+
+    $product_id  = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
+    $target_path = isset($_POST['target_path']) ? sanitize_text_field($_POST['target_path']) : '';
+
+    $orig_name = sanitize_file_name($file['name']);
+    $ext = strtolower(pathinfo($orig_name, PATHINFO_EXTENSION));
+    if (!in_array($ext, array('mp3', 'mid', 'midi'), true)) {
+        wp_send_json_error('Formato inválido. Apenas arquivos MP3 ou MIDI são permitidos.');
+    }
+
+    $base_demos_dir = rtrim(ABSPATH, '/') . '/demos';
+
+    // Determina o destino final dentro de /demos/
+    if (!empty($target_path)) {
+        // Normaliza caminho relativo (ex: /demos/102026/arquivo.mp3 -> demos/102026/arquivo.mp3)
+        $clean_rel = ltrim(trim($target_path), '/');
+        // Se já começar com 'demos/', remove para concatenar com $base_demos_dir
+        if (strpos($clean_rel, 'demos/') === 0) {
+            $clean_rel = substr($clean_rel, 6);
+        }
+        $dest_full = $base_demos_dir . '/' . $clean_rel;
+    } else {
+        $cur_folder = date('mY'); // ex: 102026
+        $clean_rel = $cur_folder . '/' . $orig_name;
+        $dest_full = $base_demos_dir . '/' . $clean_rel;
+    }
+
+    // Segurança contra Directory Traversal
+    $dest_dir = dirname($dest_full);
+    if (!is_dir($dest_dir)) {
+        if (!wp_mkdir_p($dest_dir)) {
+            wp_send_json_error('Não foi possível criar a pasta de destino: ' . esc_html($dest_dir));
+        }
+    }
+
+    // Move o arquivo temporário para o destino físico
+    if (!@move_uploaded_file($file['tmp_name'], $dest_full)) {
+        // Tenta copy + unlink como alternativa caso move_uploaded_file falhe por restrição de permissão
+        if (!@copy($file['tmp_name'], $dest_full)) {
+            wp_send_json_error('Falha ao gravar arquivo em: ' . esc_html($dest_full) . '. Verifique as permissões de escrita da pasta.');
+        }
+        @unlink($file['tmp_name']);
+    }
+
+    @chmod($dest_full, 0644);
+
+    // Salva o caminho definitivo no banco para o produto
+    $rel_demo_audio = '/demos/' . ltrim($clean_rel, '/');
+    if ($product_id > 0 && class_exists('CentralMidi_DB')) {
+        CentralMidi_DB::set_demo_audio($product_id, $rel_demo_audio);
+
+        // Atualiza status na tabela proprietária
+        global $wpdb;
+        $table = CentralMidi_DB::table_name();
+        $now = current_time('mysql');
+        $wpdb->update(
+            $table,
+            array('demo_status' => 'ok', 'demo_verified_at' => $now),
+            array('product_id' => $product_id)
+        );
+    }
+
+    wp_send_json_success(array(
+        'message'     => 'Arquivo enviado com sucesso para: ' . $rel_demo_audio,
+        'path'        => $rel_demo_audio,
+        'product_id'  => $product_id
     ));
 }
 

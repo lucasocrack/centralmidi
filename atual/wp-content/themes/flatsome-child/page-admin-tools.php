@@ -312,8 +312,9 @@ $nonce = wp_create_nonce('pa_admin_nonce');
                   <th style="min-width: 180px;">Música</th>
                   <th style="width: 140px;">Gênero</th>
                   <th style="width: 90px;">Classif.</th>
-                  <th style="width: 80px;">Mês</th>
+                  <th style="width: 120px;">Mês / Lançamento</th>
                   <th style="width: 75px;">Preço</th>
+                  <th style="width: 80px; text-align: center;">Publicado</th>
                   <th style="width: 110px;">Ação</th>
                 </tr>
               </thead>
@@ -350,13 +351,18 @@ $nonce = wp_create_nonce('pa_admin_nonce');
                     </select>
                   </td>
                   <td>
-                    <select v-model="o.mes_id" class="prod-select" :disabled="o.isCreating">
-                      <option value="">— Mês —</option>
-                      <option v-for="m in taxonomies.mes_de_lancamento" :key="m.id" :value="m.id">{{ m.name }}</option>
+                    <select v-model="o.mes_id" class="prod-select" :disabled="o.isCreating" style="max-width: 130px;">
+                      <option value="">— Mês / Ano —</option>
+                      <option v-for="m in allAvailableMonths" :key="m.value" :value="m.value">{{ m.label }}</option>
                     </select>
                   </td>
                   <td>
                     <input type="number" step="0.50" min="0" class="prod-input" v-model="o.price" style="width: 70px;" :disabled="o.isCreating">
+                  </td>
+                  <td style="text-align: center;">
+                    <label style="cursor: pointer; display: inline-flex; align-items: center; justify-content: center; margin: 0;">
+                      <input type="checkbox" v-model="o.publicado" :disabled="o.isCreating" style="margin: 0; width: 16px; height: 16px; cursor: pointer;">
+                    </label>
                   </td>
                   <td>
                     <button type="button" class="button primary button-sm" @click="createProductFromOrphan(o, idx)" :disabled="o.isCreating">
@@ -386,20 +392,39 @@ $nonce = wp_create_nonce('pa_admin_nonce');
             <table class="results-table">
               <thead>
                 <tr>
-                  <th style="width: 70px;">ID</th>
-                  <th style="width: 80px;">Prod ID</th>
+                  <th style="width: 60px;">ID</th>
+                  <th style="width: 70px;">Prod ID</th>
                   <th>Título do Produto</th>
                   <th>Caminho Registrado</th>
-                  <th>Motivo</th>
+                  <th style="width: 140px;">Motivo</th>
+                  <th style="width: 160px; text-align: center;">Ações</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="m in demoAudit.missing.slice(0, 50)" :key="m.id">
+                <tr v-for="(m, idx) in demoAudit.missing.slice(0, 50)" :key="m.id">
                   <td>{{ m.id }}</td>
-                  <td>{{ m.product_id }}</td>
+                  <td>
+                    <a :href="getEditPostUrl(m.product_id)" target="_blank" title="Abrir produto no WordPress" style="color: #2563eb; font-weight: 600; text-decoration: underline;">
+                      {{ m.product_id }} ↗
+                    </a>
+                  </td>
                   <td><strong>{{ m.title }}</strong></td>
-                  <td><code>{{ m.demo_audio }}</code></td>
+                  <td>
+                    <code style="word-break: break-all; font-size: 11px;">{{ m.demo_audio }}</code>
+                  </td>
                   <td><span class="badge-pill danger">{{ m.reason }}</span></td>
+                  <td style="text-align: center;">
+                    <div style="display: inline-flex; gap: 4px; align-items: center; justify-content: center;">
+                      <a :href="getEditPostUrl(m.product_id)" target="_blank" class="button button-sm" title="Editar produto no painel WordPress em nova guia">
+                        ✏️ Editar ↗
+                      </a>
+                      <label class="button primary button-sm" :class="{ 'is-disabled': m.isUploading }" style="margin: 0; cursor: pointer;" title="Fazer upload do arquivo MP3 deste demo">
+                        <span v-if="m.isUploading">⏳ Enviando...</span>
+                        <span v-else>📤 Upload MP3</span>
+                        <input type="file" accept=".mp3,.mid,.midi,audio/mpeg" @change="uploadMissingDemoFile($event, m, idx)" style="display: none;" :disabled="m.isUploading">
+                      </label>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -584,6 +609,7 @@ label { color: #4b5563; font-weight: 500; font-size: 14px; display: inline-flex;
 <script>
 const ajaxUrl = '<?php echo $ajax_url; ?>';
 const nonce = '<?php echo $nonce; ?>';
+const adminPostUrl = '<?php echo admin_url("post.php"); ?>';
 
 new Vue({
   el: '#app',
@@ -630,6 +656,55 @@ new Vue({
     editModalLabel() {
       const labels = { 'post_title': 'Música (título do produto)', 'url_demo': 'URL da demonstração' };
       return labels[this.editField] || this.editField;
+    },
+    allAvailableMonths() {
+      const list = [];
+      const seen = new Set();
+      const siglas = { 1: 'JAN', 2: 'FEV', 3: 'MAR', 4: 'ABR', 5: 'MAI', 6: 'JUN', 7: 'JUL', 8: 'AGO', 9: 'SET', 10: 'OUT', 11: 'NOV', 12: 'DEZ' };
+
+      // 1. Termos já existentes na taxonomia
+      if (this.taxonomies.mes_de_lancamento && this.taxonomies.mes_de_lancamento.length) {
+        this.taxonomies.mes_de_lancamento.forEach(m => {
+          list.push({
+            value: m.id,
+            label: m.name,
+            sortKey: m.name
+          });
+          seen.add(m.name.toUpperCase().trim());
+        });
+      }
+
+      // 2. Garante anos presentes e futuros (2025 até 2028) para permitir lançamentos futuros
+      const currentYear = new Date().getFullYear();
+      for (let y = 2025; y <= currentYear + 2; y++) {
+        for (let m = 1; m <= 12; m++) {
+          const label = siglas[m] + ' ' + y;
+          if (!seen.has(label)) {
+            list.push({
+              value: m + ':' + y,
+              label: label + ' (novo)',
+              sortKey: label
+            });
+            seen.add(label);
+          }
+        }
+      }
+
+      // 3. Ordenação cronológica reversa (meses futuros e recentes no topo)
+      const parseSort = (lbl) => {
+        const parts = lbl.replace('(novo)', '').trim().split(' ');
+        if (parts.length >= 2) {
+          const ano = parseInt(parts[1], 10) || 0;
+          const sig = parts[0].toUpperCase();
+          const mesMap = { JAN: 1, FEV: 2, MAR: 3, ABR: 4, MAI: 5, JUN: 6, JUL: 7, AGO: 8, SET: 9, OUT: 10, NOV: 11, DEZ: 12 };
+          const mes = mesMap[sig] || 0;
+          return (ano * 100) + mes;
+        }
+        return 0;
+      };
+
+      list.sort((a, b) => parseSort(b.label) - parseSort(a.label));
+      return list;
     }
   },
   watch: {
@@ -957,19 +1032,25 @@ new Vue({
               // Dedução do mês se estiver em subpasta tipo demos/052024/ ou demos/2024/
               o.mes_id = '';
               const matchMonth = o.path.match(/demos\/(\d{2})(\d{4})\//i);
-              if (matchMonth && this.taxonomies.mes_de_lancamento) {
-                const mesNum = matchMonth[1];
-                const anoNum = matchMonth[2];
-                // Procura na taxonomia
-                const foundMes = this.taxonomies.mes_de_lancamento.find(m => {
-                  const mName = m.name.toLowerCase();
-                  return mName.includes(anoNum) && (mName.startsWith(mesNum) || m.slug.includes(mesNum + anoNum));
-                });
+              if (matchMonth) {
+                const mesNum = parseInt(matchMonth[1], 10);
+                const anoNum = parseInt(matchMonth[2], 10);
+                // Procura na taxonomia existente primeiro
+                let foundMes = null;
+                if (this.taxonomies.mes_de_lancamento) {
+                  foundMes = this.taxonomies.mes_de_lancamento.find(m => {
+                    const mName = m.name.toLowerCase();
+                    return mName.includes(anoNum.toString()) && (mName.startsWith(matchMonth[1]) || m.slug.includes(matchMonth[1] + anoNum));
+                  });
+                }
                 if (foundMes) {
                   o.mes_id = foundMes.id;
+                } else if (mesNum >= 1 && mesNum <= 12 && anoNum >= 2000) {
+                  o.mes_id = mesNum + ':' + anoNum;
                 }
               }
 
+              o.publicado = true;
               o.price = '15.00';
               o.isCreating = false;
             });
@@ -1040,12 +1121,17 @@ new Vue({
           title: orphan.deduced_title,
           artist_id: orphan.artist_id || 0,
           genre_id: orphan.genre_id || 0,
-          mes_id: orphan.mes_id || 0,
+          mes_id: orphan.mes_id || '',
           rlm: orphan.rlm || 'M',
-          price: orphan.price || '15.00'
+          price: orphan.price || '15.00',
+          publicado: orphan.publicado ? 1 : 0
         });
         if (res && res.success) {
           this.showToast(res.data.message || 'Produto criado!');
+          // Atualiza lista de taxonomias de mês caso um novo tenha sido criado
+          if (orphan.mes_id && typeof orphan.mes_id === 'string' && orphan.mes_id.includes(':')) {
+            this.loadTaxonomy('mes_de_lancamento');
+          }
           // Remove da lista de órfãos
           this.demoAudit.orphans.splice(index, 1);
           this.demoAudit.summary.orphans_count--;
@@ -1083,6 +1169,45 @@ new Vue({
       a.href = URL.createObjectURL(blob);
       a.download = `demos_faltantes_no_disco_${Date.now()}.csv`;
       a.click();
+    },
+    getEditPostUrl(productId) {
+      return `${adminPostUrl}?post=${productId}&action=edit`;
+    },
+    async uploadMissingDemoFile(event, item, index) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      this.$set(item, 'isUploading', true);
+      const formData = new FormData();
+      formData.append('action', 'cm_admin_upload_missing_demo');
+      formData.append('_wpnonce', nonce);
+      formData.append('product_id', item.product_id);
+      formData.append('target_path', item.demo_audio || '');
+      formData.append('demo_file', file);
+
+      try {
+        const response = await fetch(ajaxUrl, {
+          method: 'POST',
+          body: formData
+        });
+        const res = await response.json();
+
+        if (res && res.success) {
+          this.showToast(res.data.message || 'Upload concluído com sucesso!');
+          // Remove da lista de faltantes e incrementa os exatos
+          this.demoAudit.missing.splice(index, 1);
+          this.demoAudit.summary.missing_count--;
+          this.demoAudit.summary.matched_exact++;
+        } else {
+          this.showToast(res.data || 'Erro ao enviar arquivo', 'error');
+        }
+      } catch (err) {
+        this.showToast('Erro de conexão ao realizar upload', 'error');
+      } finally {
+        this.$set(item, 'isUploading', false);
+        // Limpa o input file para permitir novo upload se necessário
+        event.target.value = '';
+      }
     },
     debounce(fn, ms) {
       let timer;
